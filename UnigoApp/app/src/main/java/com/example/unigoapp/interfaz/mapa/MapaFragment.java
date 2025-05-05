@@ -1,4 +1,4 @@
-package com.example.unigoapp.ui.dashboard;
+package com.example.unigoapp.interfaz.mapa;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -10,22 +10,22 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.example.unigoapp.databinding.FragmentDashboardBinding;
+import com.example.unigoapp.databinding.FragmentMapaBinding;
 
-public class DashboardFragment extends Fragment {
+public class MapaFragment extends Fragment {
 
-    private FragmentDashboardBinding binding;
+    private FragmentMapaBinding binding;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        DashboardViewModel dashboardViewModel =
-                new ViewModelProvider(this).get(DashboardViewModel.class);
+        MapaVistaModelo mapaVistaModelo =
+                new ViewModelProvider(this).get(MapaVistaModelo.class);
 
-        binding = FragmentDashboardBinding.inflate(inflater, container, false);
+        binding = FragmentMapaBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
         final TextView textView = binding.textDashboard;
-        dashboardViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
+        mapaVistaModelo.getText().observe(getViewLifecycleOwner(), textView::setText);
         return root;
     }
 

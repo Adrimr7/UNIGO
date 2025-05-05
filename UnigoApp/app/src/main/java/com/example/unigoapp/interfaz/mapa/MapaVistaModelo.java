@@ -1,16 +1,16 @@
-package com.example.unigoapp.ui.home;
+package com.example.unigoapp.interfaz.mapa;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-public class HomeViewModel extends ViewModel {
+public class MapaVistaModelo extends ViewModel {
 
     private final MutableLiveData<String> mText;
 
-    public HomeViewModel() {
+    public MapaVistaModelo() {
         mText = new MutableLiveData<>();
-        mText.setValue("This is home fragment");
+        mText.setValue("Esta es la vista del mapa");
     }
 
     public LiveData<String> getText() {

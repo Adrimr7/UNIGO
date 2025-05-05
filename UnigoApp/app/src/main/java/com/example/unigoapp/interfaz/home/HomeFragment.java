@@ -1,4 +1,4 @@
-package com.example.unigoapp.ui.home;
+package com.example.unigoapp.interfaz.home;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -18,14 +18,14 @@ public class HomeFragment extends Fragment {
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        HomeViewModel homeViewModel =
-                new ViewModelProvider(this).get(HomeViewModel.class);
+        HomeVistaModelo homeVistaModelo =
+                new ViewModelProvider(this).get(HomeVistaModelo.class);
 
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
         final TextView textView = binding.textHome;
-        homeViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
+        homeVistaModelo.getText().observe(getViewLifecycleOwner(), textView::setText);
         return root;
     }
 

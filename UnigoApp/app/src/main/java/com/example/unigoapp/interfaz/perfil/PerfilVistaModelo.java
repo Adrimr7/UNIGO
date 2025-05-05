@@ -1,16 +1,16 @@
-package com.example.unigoapp.ui.notifications;
+package com.example.unigoapp.interfaz.perfil;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-public class NotificationsViewModel extends ViewModel {
+public class PerfilVistaModelo extends ViewModel {
 
     private final MutableLiveData<String> mText;
 
-    public NotificationsViewModel() {
+    public PerfilVistaModelo() {
         mText = new MutableLiveData<>();
-        mText.setValue("This is notifications fragment");
+        mText.setValue("Esta es la vista de notificaciones");
     }
 
     public LiveData<String> getText() {

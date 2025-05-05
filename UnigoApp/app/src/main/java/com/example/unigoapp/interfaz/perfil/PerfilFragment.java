@@ -1,4 +1,4 @@
-package com.example.unigoapp.ui.notifications;
+package com.example.unigoapp.interfaz.perfil;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -10,22 +10,22 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.example.unigoapp.databinding.FragmentNotificationsBinding;
+import com.example.unigoapp.databinding.FragmentPerfilBinding;
 
-public class NotificationsFragment extends Fragment {
+public class PerfilFragment extends Fragment {
 
-    private FragmentNotificationsBinding binding;
+    private FragmentPerfilBinding binding;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        NotificationsViewModel notificationsViewModel =
-                new ViewModelProvider(this).get(NotificationsViewModel.class);
+        PerfilVistaModelo perfilVistaModelo =
+                new ViewModelProvider(this).get(PerfilVistaModelo.class);
 
-        binding = FragmentNotificationsBinding.inflate(inflater, container, false);
+        binding = FragmentPerfilBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
         final TextView textView = binding.textNotifications;
-        notificationsViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
+        perfilVistaModelo.getText().observe(getViewLifecycleOwner(), textView::setText);
         return root;
     }
 

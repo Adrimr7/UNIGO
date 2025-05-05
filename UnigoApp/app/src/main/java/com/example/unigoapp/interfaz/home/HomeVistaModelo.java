@@ -1,16 +1,16 @@
-package com.example.unigoapp.ui.dashboard;
+package com.example.unigoapp.interfaz.home;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-public class DashboardViewModel extends ViewModel {
+public class HomeVistaModelo extends ViewModel {
 
     private final MutableLiveData<String> mText;
 
-    public DashboardViewModel() {
+    public HomeVistaModelo() {
         mText = new MutableLiveData<>();
-        mText.setValue("This is dashboard fragment");
+        mText.setValue("Esta es la vista de home");
     }
 
     public LiveData<String> getText() {
