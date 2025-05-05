@@ -3,4 +3,7 @@
     <string name="titulo_home">Inicio</string>
     <string name="titulo_mapa">Mapa</string>
     <string name="titulo_perfil">Mi Perfil</string>
+    <string name="castellano">Castellano</string>
+    <string name="euskera">Euskera</string>
+    <string name="english">English</string>
 </resources>

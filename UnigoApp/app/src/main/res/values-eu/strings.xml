@@ -1,6 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">UnigoApp</string>
     <string name="titulo_home">Hasiera</string>
     <string name="titulo_mapa">Mapa</string>
     <string name="titulo_perfil">Nire Profila</string>
+    <string name="castellano">Castellano</string>
+    <string name="euskera">Euskera</string>
+    <string name="english">English</string>
 </resources>
