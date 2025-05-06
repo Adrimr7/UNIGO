@@ -6,4 +6,7 @@
     <string name="castellano">Castellano</string>
     <string name="euskera">Euskera</string>
     <string name="english">English</string>
+    <string name="texto_home">Este es el fragmento de home</string>
+    <string name="texto_mapa">Este es el fragmento de mapa</string>
+    <string name="texto_perfil">Este es el fragmento de perfil</string>
 </resources>

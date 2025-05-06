@@ -7,4 +7,7 @@
     <string name="titulo_home">Home</string>
     <string name="titulo_mapa">Map</string>
     <string name="titulo_perfil">My Profile</string>
+    <string name="texto_home">This is the home fragment</string>
+    <string name="texto_mapa">This is the map fragment</string>
+    <string name="texto_perfil">This is the profile fragment</string>
 </resources>

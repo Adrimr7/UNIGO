@@ -7,4 +7,7 @@
     <string name="castellano">Castellano</string>
     <string name="euskera">Euskera</string>
     <string name="english">English</string>
+    <string name="texto_home">Hau hasiera fragment da</string>
+    <string name="texto_mapa">Hau mapa fragment da</string>
+    <string name="texto_perfil">Hau profil fragment da</string>
 </resources>
