@@ -90,10 +90,11 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
     private void habilitarUbicacion() {
         System.out.println("MapaFrag: habilitarUbicacion");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            mvMapa.getOverlays().add(new MyLocationNewOverlay(
-                    new GpsMyLocationProvider(requireContext()),
-                    mvMapa
-            ));
+
+            MyLocationNewOverlay ubicacionOverlay = new MyLocationNewOverlay(
+                    new GpsMyLocationProvider(requireContext()), mvMapa);
+            ubicacionOverlay.enableMyLocation();
+            mvMapa.getOverlays().add(ubicacionOverlay);
         }
     }
 
@@ -113,7 +114,8 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         mvMapa.setScrollableAreaLimitDouble(
                 new BoundingBox(43.1, -2.4, 42.7, -2.8)
         );
-        mvMapa.setMinZoomLevel(10.9);
+        // TODO: quitar el actual y poner: mvMapa.setMinZoomLevel(10.9);
+        mvMapa.setMinZoomLevel(6.98);
         Marker marker = new Marker(mvMapa);
         marker.setPosition(CENTRO_GASTEIZ);
         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
