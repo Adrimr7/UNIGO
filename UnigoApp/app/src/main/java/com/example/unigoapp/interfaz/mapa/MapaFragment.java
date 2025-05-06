@@ -1,6 +1,5 @@
 package com.example.unigoapp.interfaz.mapa;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,15 +9,21 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
-
-import com.example.unigoapp.MainActivity;
 import com.example.unigoapp.R;
+import com.example.unigoapp.MainActivity;
 import com.example.unigoapp.databinding.FragmentMapaBinding;
+
+import org.osmdroid.config.Configuration;
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
+import org.osmdroid.util.GeoPoint;
+import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.Marker;
 
 public class MapaFragment extends Fragment implements MainActivity.UpdatableFragment {
 
     private FragmentMapaBinding binding;
     private TextView tvMapa;
+    private MapView mvMapa;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -43,6 +48,6 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
     @Override
     public void actualizarTextos() {
         System.out.println("MapaFrag: actualizarTextos");
-        tvMapa.setText(R.string.texto_mapa);
+        tvMapa.setText("");
     }
 }
