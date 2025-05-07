@@ -47,12 +47,10 @@ public class GrafoCarrilesBici {
                 GeoPoint prev = null;
                 for (int j = 0; j < coords.length(); j++) {
                     JSONArray punto = coords.getJSONArray(j);
-                    double lon = punto.getDouble(0);
-                    double lat = punto.getDouble(1);
-                    GeoPoint actual = new GeoPoint(lat, lon);
+                    GeoPoint actual = new GeoPoint(punto.getDouble(1), punto.getDouble(0));
 
                     grafo.addVertex(actual);
-                    if (prev != null) {
+                    if (prev != null && !actual.equals(prev)) {
                         grafo.addVertex(prev);
                         DefaultWeightedEdge edge = grafo.addEdge(prev, actual);
                         if (edge != null) {

@@ -44,6 +44,8 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import kotlin.coroutines.jvm.internal.SuspendFunction;
+
 
 public class MapaFragment extends Fragment implements MainActivity.UpdatableFragment {
 
@@ -75,23 +77,26 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         ImageButton btnCenter = root.findViewById(R.id.btn_center);
 
         configurarMapa();
-
+        System.out.println("Mapa configurado");
         comprobarPermisoUbicacion();
 
         btnCenter.setOnClickListener(v -> centrarMapaEnGasteiz());
 
         grafoCarrilesBici = new GrafoCarrilesBici(requireContext());
 
+        System.out.println("Grafo Carriles Bici hecho");
         mvMapa.setOnTouchListener((v, event) -> false); // necesario para que reciba los clicks
         mvMapa.getOverlays().add(new MapEventsOverlay(requireContext(), new MapEventsReceiver() {
             @Override
             public boolean singleTapConfirmedHelper(GeoPoint p) {
+                System.out.println("Ha pulsado una vez");
                 calcularYMostrarRuta(p);
                 return true;
             }
 
             @Override
             public boolean longPressHelper(GeoPoint p) {
+                System.out.println("Ha mantenido pulsado");
                 return false;
             }
         }));
@@ -145,8 +150,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         mvMapa.setScrollableAreaLimitDouble(
                 new BoundingBox(43.1, -2.4, 42.7, -2.8)
         );
-        // TODO: quitar el actual y poner: mvMapa.setMinZoomLevel(10.9);
-        mvMapa.setMinZoomLevel(6.98);
+        mvMapa.setMinZoomLevel(10.9);
         Marker marker = new Marker(mvMapa);
         marker.setPosition(CENTRO_GASTEIZ);
         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
@@ -215,7 +219,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
                     JSONArray coords = geometry.getJSONArray("coordinates");
 
                     Polyline polyline = new Polyline();
-                    polyline.setColor(ContextCompat.getColor(requireContext(), R.color.teal_700)); // o el color que prefieras
+                    polyline.setColor(ContextCompat.getColor(requireContext(), R.color.teal_700));
                     polyline.setWidth(4.0f);
 
                     for (int j = 0; j < coords.length(); j++) {
@@ -254,7 +258,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         rutaActual.setWidth(10f);
 
         mvMapa.getOverlays().add(rutaActual);
-        mvMapa.invalidate(); // refresca el mapa
+        mvMapa.invalidate();
     }
 
 
