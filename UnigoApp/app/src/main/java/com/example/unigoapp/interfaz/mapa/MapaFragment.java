@@ -154,8 +154,8 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         mvMapa.getOverlays().add(marker);
         centrarMapaEnGasteiz();
 
-        cargarCarrilesBici();
-
+        Thread newThread = new Thread(this::cargarCarrilesBici);
+        newThread.start();
     }
 
     private void centrarMapaEnGasteiz() {
