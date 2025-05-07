@@ -45,4 +45,5 @@ dependencies {
     androidTestImplementation libs.espresso.core
     implementation libs.osmdroid.android
     implementation libs.preference
+    implementation libs.jgrapht.core
 }
