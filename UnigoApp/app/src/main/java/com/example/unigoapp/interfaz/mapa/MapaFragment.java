@@ -23,7 +23,6 @@ import androidx.preference.PreferenceManager;
 import com.example.unigoapp.R;
 import com.example.unigoapp.MainActivity;
 import com.example.unigoapp.databinding.FragmentMapaBinding;
-import com.example.unigoapp.interfaz.mapa.bici.GrafoCarrilesBici;
 import com.example.unigoapp.interfaz.mapa.bici.GrafoCarrilesBiciOptimizado;
 
 import org.json.JSONArray;
@@ -120,11 +119,10 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
                 progressDialog.setCancelable(false);
                 progressDialog.show();
 
-                // Usar un Handler para simular operación asíncrona
                 new Handler(Looper.getMainLooper()).postDelayed(() -> {
                     calcularYMostrarRuta(p);
                     progressDialog.dismiss();
-                }, 100); // Pequeño delay para permitir que el diálogo se muestre
+                }, 100);
 
                 return true;
             }

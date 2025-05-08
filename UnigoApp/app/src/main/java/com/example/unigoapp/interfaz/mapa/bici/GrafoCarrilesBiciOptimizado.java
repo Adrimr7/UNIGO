@@ -23,7 +23,7 @@ public class GrafoCarrilesBiciOptimizado {
     private final Graph<GeoPoint, DefaultWeightedEdge> grafo;
     private final Map<String, GeoPoint> nodosMap;
     private final Context context;
-    private static final double DISTANCIA_MINIMA_NODOS = 15.0; // 10 metros
+    private static final double DISTANCIA_MINIMA_NODOS = 15.0; // 15 metros
 
     public GrafoCarrilesBiciOptimizado(Context context) {
         this.context = context;
@@ -37,8 +37,7 @@ public class GrafoCarrilesBiciOptimizado {
 
         try (InputStream is = context.getAssets().open("viasciclistas23.geojson")) {
             String json = inputStreamToString(is);
-            JSONObject geojson = new JSONObject(json);
-            JSONArray features = geojson.getJSONArray("features");
+            JSONArray features = new JSONObject(json).getJSONArray("features");
 
             for (int i = 0; i < features.length(); i++) {
                 procesarFeature(features.getJSONObject(i));
@@ -114,14 +113,12 @@ public class GrafoCarrilesBiciOptimizado {
     private GeoPoint obtenerNodoGrafo(GeoPoint punto) {
         String clave = String.format("%.6f,%.6f", punto.getLatitude(), punto.getLongitude());
 
-        // Buscar nodo existente cercano
         for (Map.Entry<String, GeoPoint> entry : nodosMap.entrySet()) {
             if (entry.getValue().distanceToAsDouble(punto) <= DISTANCIA_MINIMA_NODOS) {
                 return entry.getValue();
             }
         }
 
-        // Nodo nuevo
         grafo.addVertex(punto);
         nodosMap.put(clave, punto);
         return punto;
@@ -156,14 +153,13 @@ public class GrafoCarrilesBiciOptimizado {
         GeoPoint masCercano = null;
         double distanciaMinima = Double.MAX_VALUE;
 
-        // Buscar en nodos cercanos primero (optimización espacial)
         for (GeoPoint nodo : nodosMap.values()) {
             double distancia = punto.distanceToAsDouble(nodo);
             if (distancia < distanciaMinima) {
                 distanciaMinima = distancia;
                 masCercano = nodo;
                 if (distanciaMinima < DISTANCIA_MINIMA_NODOS) {
-                    break; // Buen candidato encontrado
+                    break;
                 }
             }
         }
