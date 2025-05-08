@@ -2,9 +2,12 @@ package com.example.unigoapp.interfaz.mapa;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +24,7 @@ import com.example.unigoapp.R;
 import com.example.unigoapp.MainActivity;
 import com.example.unigoapp.databinding.FragmentMapaBinding;
 import com.example.unigoapp.interfaz.mapa.bici.GrafoCarrilesBici;
+import com.example.unigoapp.interfaz.mapa.bici.GrafoCarrilesBiciOptimizado;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -42,9 +46,8 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
-
-import kotlin.coroutines.jvm.internal.SuspendFunction;
 
 
 public class MapaFragment extends Fragment implements MainActivity.UpdatableFragment {
@@ -55,8 +58,9 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
     private static final GeoPoint PUNTO_UNIVERSIDAD = new GeoPoint(42.839536, -2.670918);
     private static final GeoPoint CENTRO_GASTEIZ = new GeoPoint(42.846718, -2.671635);
     private static final int PERMISO_UBICACION = 0;
-    private GrafoCarrilesBici grafoCarrilesBici;
+    private GrafoCarrilesBiciOptimizado grafoCarrilesBici;
     private Polyline rutaActual;
+    private ProgressDialog progressDialog;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -82,15 +86,46 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
 
         btnCenter.setOnClickListener(v -> centrarMapaEnGasteiz());
 
-        grafoCarrilesBici = new GrafoCarrilesBici(requireContext());
 
-        System.out.println("Grafo Carriles Bici hecho");
+        progressDialog = new ProgressDialog(requireContext());
+        progressDialog.setMessage("Calculando grafo...");
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+
+        new Thread(() -> {
+            long startTime = System.currentTimeMillis();
+
+            grafoCarrilesBici = new GrafoCarrilesBiciOptimizado(requireContext());
+
+            long endTime = System.currentTimeMillis();
+            long duration = endTime - startTime;
+            System.out.println("TiempoEjecucion: grafo tardó: " + duration + " ms");
+
+            requireActivity().runOnUiThread(() -> {
+                if (progressDialog != null && progressDialog.isShowing()) {
+                    progressDialog.dismiss();
+                }
+            });
+        }).start();
+
+
         mvMapa.setOnTouchListener((v, event) -> false); // necesario para que reciba los clicks
         mvMapa.getOverlays().add(new MapEventsOverlay(requireContext(), new MapEventsReceiver() {
             @Override
             public boolean singleTapConfirmedHelper(GeoPoint p) {
                 System.out.println("Ha pulsado una vez");
-                calcularYMostrarRuta(p);
+
+                progressDialog = new ProgressDialog(requireContext());
+                progressDialog.setMessage("Calculando ruta...");
+                progressDialog.setCancelable(false);
+                progressDialog.show();
+
+                // Usar un Handler para simular operación asíncrona
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    calcularYMostrarRuta(p);
+                    progressDialog.dismiss();
+                }, 100); // Pequeño delay para permitir que el diálogo se muestre
+
                 return true;
             }
 
@@ -158,7 +193,13 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         mvMapa.getOverlays().add(marker);
         centrarMapaEnGasteiz();
 
-        Thread newThread = new Thread(this::cargarCarrilesBici);
+        Thread newThread = new Thread(() -> {
+            long startTime = System.currentTimeMillis();
+            cargarCarrilesBici();
+            long endTime = System.currentTimeMillis();
+            long duration = endTime - startTime;
+            System.out.println("TiempoEjecucion" + "cargarCarrilesBici tarda: " + duration + " ms");
+        });
         newThread.start();
     }
 
@@ -169,6 +210,9 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
         binding = null;
     }
 

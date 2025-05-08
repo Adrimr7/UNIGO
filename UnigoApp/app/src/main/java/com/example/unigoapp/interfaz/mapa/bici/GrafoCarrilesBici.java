@@ -16,46 +16,48 @@ import java.util.*;
 public class GrafoCarrilesBici {
     private Graph<GeoPoint, DefaultWeightedEdge> grafo;
     private final Context context;
-
+    private final Map<GeoPoint, GeoPoint> cacheNodoCercano;
     public GrafoCarrilesBici(Context context) {
         this.context = context;
         this.grafo = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
+        this.cacheNodoCercano = new HashMap<>();
         cargarGeoJsonYConstruirGrafo();
     }
 
     private void cargarGeoJsonYConstruirGrafo() {
-        try {
-            InputStream is = context.getAssets().open("viasciclistas23.geojson");
-            int size = is.available();
-            byte[] buffer = new byte[size];
-            is.read(buffer);
-            is.close();
-
-            String json = new String(buffer, StandardCharsets.UTF_8);
+        try (InputStream is = context.getAssets().open("viasciclistas23.geojson")) {
+            String json = new Scanner(is, StandardCharsets.UTF_8.name()).useDelimiter("\\A").next();
             JSONObject geojson = new JSONObject(json);
             JSONArray features = geojson.getJSONArray("features");
 
+            Map<GeoPoint, GeoPoint> uniquePoints = new HashMap<>();
+
             for (int i = 0; i < features.length(); i++) {
                 JSONObject feature = features.getJSONObject(i);
-
                 if (feature.isNull("geometry")) continue;
+
                 JSONObject geometry = feature.getJSONObject("geometry");
                 if (!geometry.getString("type").equals("LineString")) continue;
 
                 JSONArray coords = geometry.getJSONArray("coordinates");
-
                 GeoPoint prev = null;
+
                 for (int j = 0; j < coords.length(); j++) {
                     JSONArray punto = coords.getJSONArray(j);
                     GeoPoint actual = new GeoPoint(punto.getDouble(1), punto.getDouble(0));
 
-                    grafo.addVertex(actual);
+                    GeoPoint existing = encontrarPuntoSimilar(uniquePoints, actual, 0.00001);
+                    if (existing == null) {
+                        uniquePoints.put(actual, actual);
+                        grafo.addVertex(actual);
+                    } else {
+                        actual = existing;
+                    }
+
                     if (prev != null && !actual.equals(prev)) {
-                        grafo.addVertex(prev);
                         DefaultWeightedEdge edge = grafo.addEdge(prev, actual);
                         if (edge != null) {
-                            double distancia = prev.distanceToAsDouble(actual);
-                            grafo.setEdgeWeight(edge, distancia);
+                            grafo.setEdgeWeight(edge, prev.distanceToAsDouble(actual));
                         }
                     }
                     prev = actual;
@@ -66,7 +68,21 @@ public class GrafoCarrilesBici {
         }
     }
 
+    private GeoPoint encontrarPuntoSimilar(Map<GeoPoint, GeoPoint> mapaPuntos, GeoPoint target, double tolerancia) {
+        for (GeoPoint punto : mapaPuntos.keySet()) {
+            if (Math.abs(punto.getLatitude() - target.getLatitude()) < tolerancia &&
+                    Math.abs(punto.getLongitude() - target.getLongitude()) < tolerancia) {
+                return punto;
+            }
+        }
+        return null;
+    }
+
     private GeoPoint encontrarNodoMasCercano(GeoPoint punto) {
+        if (cacheNodoCercano.containsKey(punto)) {
+            return cacheNodoCercano.get(punto);
+        }
+
         GeoPoint masCercano = null;
         double minDist = Double.MAX_VALUE;
 
@@ -77,6 +93,11 @@ public class GrafoCarrilesBici {
                 masCercano = nodo;
             }
         }
+
+        if (masCercano != null) {
+            cacheNodoCercano.put(punto, masCercano);
+        }
+
         return masCercano;
     }
 
