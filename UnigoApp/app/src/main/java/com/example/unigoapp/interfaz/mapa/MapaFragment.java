@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -24,6 +25,8 @@ import com.example.unigoapp.R;
 import com.example.unigoapp.MainActivity;
 import com.example.unigoapp.databinding.FragmentMapaBinding;
 import com.example.unigoapp.interfaz.mapa.bici.GrafoCarrilesBiciOptimizado;
+import com.example.unigoapp.interfaz.mapa.bus.GrafoBus;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -45,7 +48,6 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.List;
 
 
@@ -58,8 +60,10 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
     private static final GeoPoint CENTRO_GASTEIZ = new GeoPoint(42.846718, -2.671635);
     private static final int PERMISO_UBICACION = 0;
     private GrafoCarrilesBiciOptimizado grafoCarrilesBici;
+    private GrafoBus grafoBuses;
     private Polyline rutaActual;
     private ProgressDialog progressDialog;
+    private FloatingActionButton fabOpciones;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -72,6 +76,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
 
         mvMapa = binding.mapView;
         tvMapa = binding.tvMapa;
+        fabOpciones = binding.fabOptions;
 
         mapaVistaModelo.getText().observe(getViewLifecycleOwner(), tvMapa::setText);
 
@@ -86,21 +91,29 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         MapaVistaModelo mvModelo = new ViewModelProvider(requireActivity()).get(MapaVistaModelo.class);
 
         btnCenter.setOnClickListener(v -> centrarMapaEnGasteiz());
-        // guardar el grafo en el modelo.
-        if (mvModelo.getGrafo() == null) {
+
+        // grafo de bicis y buses
+        if (mvModelo.getGrafoBus() == null || mvModelo.getGrafoBici() == null) {
             progressDialog = new ProgressDialog(requireContext());
-            progressDialog.setMessage("Calculando grafo...");
+            progressDialog.setMessage("Calculando grafo de buses...");
             progressDialog.setCancelable(false);
             progressDialog.show();
 
             new Thread(() -> {
                 long startTime = System.currentTimeMillis();
 
-                grafoCarrilesBici = new GrafoCarrilesBiciOptimizado(requireContext());
-                mvModelo.setGrafo(grafoCarrilesBici);
+                grafoBuses = new GrafoBus(requireContext());
+                mvModelo.setGrafoBus(grafoBuses);
                 long endTime = System.currentTimeMillis();
                 long duration = endTime - startTime;
-                System.out.println("TiempoEjecucion: grafo tardó: " + duration + " ms");
+                System.out.println("TiempoEjecucion: grafo BUSES tardó: " + duration + " ms");
+
+                progressDialog.setMessage("Calculando grafo de bicis...");
+                grafoCarrilesBici = new GrafoCarrilesBiciOptimizado(requireContext());
+                mvModelo.setGrafoBici(grafoCarrilesBici);
+                endTime = System.currentTimeMillis();
+                duration = endTime - startTime;
+                System.out.println("TiempoEjecucion: grafo BICI tardó: " + duration + " ms");
 
                 requireActivity().runOnUiThread(() -> {
                     if (progressDialog != null && progressDialog.isShowing()) {
@@ -110,9 +123,9 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
             }).start();
         }
         else {
-            grafoCarrilesBici = mvModelo.getGrafo();
+            grafoBuses = mvModelo.getGrafoBus();
+            grafoCarrilesBici = mvModelo.getGrafoBici();
         }
-
 
 
         mvMapa.setOnTouchListener((v, event) -> false); // necesario para que reciba los clicks
@@ -120,17 +133,6 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
             @Override
             public boolean singleTapConfirmedHelper(GeoPoint p) {
                 System.out.println("Ha pulsado una vez");
-
-                progressDialog = new ProgressDialog(requireContext());
-                progressDialog.setMessage("Calculando ruta...");
-                progressDialog.setCancelable(false);
-                progressDialog.show();
-
-                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    calcularYMostrarRuta(p);
-                    progressDialog.dismiss();
-                }, 100);
-
                 return true;
             }
 
@@ -140,6 +142,8 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
                 return false;
             }
         }));
+        
+        fabOpciones.setOnClickListener(view -> mostrarOpcionesRuta(view));
 
         return root;
     }
@@ -198,14 +202,23 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         mvMapa.getOverlays().add(marker);
         centrarMapaEnGasteiz();
 
-        Thread newThread = new Thread(() -> {
+        Thread hiloBicis = new Thread(() -> {
             long startTime = System.currentTimeMillis();
             cargarCarrilesBici();
             long endTime = System.currentTimeMillis();
             long duration = endTime - startTime;
             System.out.println("TiempoEjecucion" + "cargarCarrilesBici tarda: " + duration + " ms");
         });
-        newThread.start();
+        hiloBicis.start();
+
+        Thread hiloBuses = new Thread(() -> {
+            long startTime = System.currentTimeMillis();
+            cargarBuses();
+            long endTime = System.currentTimeMillis();
+            long duration = endTime - startTime;
+            System.out.println("TiempoEjecucion" + "cargarCarrilesBici tarda: " + duration + " ms");
+        });
+        hiloBuses.start();
     }
 
     private void centrarMapaEnGasteiz() {
@@ -290,7 +303,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         }
     }
 
-    private void calcularYMostrarRuta(GeoPoint destino) {
+    private void calcularYMostrarRutaBici(GeoPoint destino) {
         if (grafoCarrilesBici == null) return;
 
         List<GeoPoint> ruta = grafoCarrilesBici.calcularRuta(PUNTO_UNIVERSIDAD, destino);
@@ -309,6 +322,121 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         mvMapa.getOverlays().add(rutaActual);
         mvMapa.invalidate();
     }
+    
+    private void calcularYMostrarRutaBus(GeoPoint destino) {
+        if (grafoBuses == null) return;
+
+        List<GeoPoint> ruta = grafoBuses.calcularRuta(PUNTO_UNIVERSIDAD, destino);
+
+        if (ruta == null || ruta.isEmpty()) return;
+
+        if (rutaActual != null) {
+            mvMapa.getOverlays().remove(rutaActual);
+        }
+
+        rutaActual = new Polyline();
+        rutaActual.setPoints(ruta);
+        rutaActual.setColor(ContextCompat.getColor(requireContext(), R.color.purple_200));
+        rutaActual.setWidth(10f);
+
+        mvMapa.getOverlays().add(rutaActual);
+        mvMapa.invalidate();
+    }
 
 
+    private void cargarBuses() {
+        try {
+            InputStream is = requireContext().getAssets().open("rutas_buses.geojson");
+            int size = is.available();
+            byte[] buffer = new byte[size];
+            is.read(buffer);
+            is.close();
+            String json = new String(buffer, StandardCharsets.UTF_8);
+
+            JSONObject geojson = new JSONObject(json);
+            JSONArray features = geojson.getJSONArray("features");
+
+            for (int i = 0; i < features.length(); i++) {
+                JSONObject feature = features.getJSONObject(i);
+                if (feature.isNull("geometry")) continue;
+                JSONObject geometry = feature.getJSONObject("geometry");
+                String tipo = geometry.getString("type");
+
+                if (tipo.equals("LineString")) {
+                    JSONArray coords = geometry.getJSONArray("coordinates");
+
+                    Polyline polyline = new Polyline();
+                    polyline.setColor(ContextCompat.getColor(requireContext(), R.color.purple_200));
+                    polyline.setWidth(4.0f);
+
+                    for (int j = 0; j < coords.length(); j++) {
+                        JSONArray punto = coords.getJSONArray(j);
+                        double lon = punto.getDouble(0);
+                        double lat = punto.getDouble(1);
+                        polyline.addPoint(new GeoPoint(lat, lon));
+                    }
+
+                    mvMapa.getOverlays().add(polyline);
+                }
+            }
+
+            mvMapa.invalidate(); // refresca el mapa
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void mostrarOpcionesRuta(View view) {
+        PopupMenu popupMenu = new PopupMenu(getContext(), view);
+        popupMenu.getMenuInflater().inflate(R.menu.opciones_ruta_menu, popupMenu.getMenu());
+
+        popupMenu.show();
+
+        popupMenu.setOnMenuItemClickListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.opcion_caminar) {
+                calcularRutaOpcion("andar");
+                return true;
+            } else if (itemId == R.id.opcion_bici) {
+                calcularRutaOpcion("bici");
+                return true;
+            } else if (itemId == R.id.opcion_bus) {
+                calcularRutaOpcion("bus");
+                return true;
+            }
+            return false;
+        });
+    }
+
+    private void calcularRutaOpcion(String tipo) {
+        if (tipo.equals("andar")) {
+            System.out.println("Andando");
+        }
+        else if (tipo.equals("bici")) {
+            progressDialog = new ProgressDialog(requireContext());
+            progressDialog.setMessage("Calculando ruta en bici...");
+            progressDialog.setCancelable(false);
+            progressDialog.show();
+
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                // TODO: cambiar ubicacion a la actual.
+                calcularYMostrarRutaBici(CENTRO_GASTEIZ);
+                progressDialog.dismiss();
+            }, 100);
+        }
+        else if (tipo.equals("bus")) {
+            progressDialog = new ProgressDialog(requireContext());
+            progressDialog.setMessage("Calculando ruta en bus...");
+            progressDialog.setCancelable(false);
+            progressDialog.show();
+
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                // TODO: cambiar ubicacion a la actual.
+                calcularYMostrarRutaBus(CENTRO_GASTEIZ);
+                progressDialog.dismiss();
+            }, 100);
+        }
+    }
 }

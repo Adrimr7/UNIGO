@@ -9,4 +9,8 @@
     <string name="texto_home">Este es el fragmento de home</string>
     <string name="texto_mapa">Este es el fragmento de mapa</string>
     <string name="texto_perfil">Este es el fragmento de perfil</string>
+    <string name="opciones_ruta">Ruta</string>
+    <string name="caminar">Caminar</string>
+    <string name="en_bici">En Bici</string>
+    <string name="en_bus">En Bus</string>
 </resources>

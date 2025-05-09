@@ -5,11 +5,13 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.example.unigoapp.interfaz.mapa.bici.GrafoCarrilesBiciOptimizado;
+import com.example.unigoapp.interfaz.mapa.bus.GrafoBus;
 
 public class MapaVistaModelo extends ViewModel {
 
     private final MutableLiveData<String> mText;
     private GrafoCarrilesBiciOptimizado grafoCarrilesBici;
+    private GrafoBus grafoBuses;
 
     public MapaVistaModelo() {
         mText = new MutableLiveData<>();
@@ -20,14 +22,25 @@ public class MapaVistaModelo extends ViewModel {
         return mText;
     }
 
-    public GrafoCarrilesBiciOptimizado getGrafo() {
+    public GrafoCarrilesBiciOptimizado getGrafoBici() {
         if (grafoCarrilesBici == null) {
             return null;
         }
         return grafoCarrilesBici;
     }
 
-    public void setGrafo(GrafoCarrilesBiciOptimizado grafo) {
+    public GrafoBus getGrafoBus() {
+        if (grafoBuses == null) {
+            return null;
+        }
+        return grafoBuses;
+    }
+
+    public void setGrafoBici(GrafoCarrilesBiciOptimizado grafo) {
         grafoCarrilesBici = grafo;
+    }
+
+    public void setGrafoBus(GrafoBus grafo) {
+        grafoBuses = grafo;
     }
 }

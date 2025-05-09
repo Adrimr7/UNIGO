@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">UnigoApp</string>
-    <string name="castellano">Castellano</string>
-    <string name="euskera">Euskera</string>
+    <string name="castellano">Spanish</string>
+    <string name="euskera">Basque</string>
     <string name="english">English</string>
     <string name="titulo_home">Home</string>
     <string name="titulo_mapa">Map</string>
@@ -10,4 +10,8 @@
     <string name="texto_home">This is the home fragment</string>
     <string name="texto_mapa">This is the map fragment</string>
     <string name="texto_perfil">This is the profile fragment</string>
+    <string name="opciones_ruta">Route</string>
+    <string name="caminar">Walking</string>
+    <string name="en_bici">With a Bike</string>
+    <string name="en_bus">By Bus</string>
 </resources>
