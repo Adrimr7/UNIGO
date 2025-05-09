@@ -35,7 +35,7 @@ public class GrafoAndar {
     private void construirGrafoEficiente() {
         long startTime = System.currentTimeMillis();
 
-        try (InputStream is = context.getAssets().open("mapa_andando.geojson")) {
+        try (InputStream is = context.getAssets().open("mapaandando_utf8-1.json")) {
             String json = inputStreamToString(is);
             JSONArray features = new JSONObject(json).getJSONArray("features");
 

@@ -109,13 +109,12 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
                 long endTime = System.currentTimeMillis();
                 long duration = endTime - startTime;
                 System.out.println("TiempoEjecucion: grafo ANDAR tardó: " + duration + " ms");
-
-
-                startTime = System.currentTimeMillis();
+                /*
+                long startTime = System.currentTimeMillis();
                 grafoBuses = new GrafoBus(requireContext());
                 mvModelo.setGrafoBus(grafoBuses);
-                endTime = System.currentTimeMillis();
-                duration = endTime - startTime;
+                long endTime = System.currentTimeMillis();
+                long duration = endTime - startTime;
                 System.out.println("TiempoEjecucion: grafo BUSES tardó: " + duration + " ms");
 
                 progressDialog.setMessage("Calculando grafo de bicis...");
@@ -124,7 +123,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
                 endTime = System.currentTimeMillis();
                 duration = endTime - startTime;
                 System.out.println("TiempoEjecucion: grafo BICI tardó: " + duration + " ms");
-
+                */
                 requireActivity().runOnUiThread(() -> {
                     if (progressDialog != null && progressDialog.isShowing()) {
                         progressDialog.dismiss();
@@ -222,7 +221,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
             System.out.println("TiempoEjecucion" + "cargarAndar tarda: " + duration + " ms");
         });
         hiloAndar.start();
-
+        */
         Thread hiloBicis = new Thread(() -> {
             long startTime = System.currentTimeMillis();
             cargarCarrilesBici();
@@ -240,7 +239,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
             System.out.println("TiempoEjecucion" + "cargarCarrilesBici tarda: " + duration + " ms");
         });
         hiloBuses.start();
-        */
+
     }
 
     private void centrarMapaEnGasteiz() {
@@ -412,7 +411,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
 
     private void cargarAndar() {
         try {
-            InputStream is = requireContext().getAssets().open("mapa_andando.geojson");
+            InputStream is = requireContext().getAssets().open("mapaandando_utf8-1.json");
             int size = is.available();
             byte[] buffer = new byte[size];
             is.read(buffer);
