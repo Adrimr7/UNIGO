@@ -83,29 +83,36 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         System.out.println("Mapa configurado");
         comprobarPermisoUbicacion();
 
+        MapaVistaModelo mvModelo = new ViewModelProvider(requireActivity()).get(MapaVistaModelo.class);
+
         btnCenter.setOnClickListener(v -> centrarMapaEnGasteiz());
+        // guardar el grafo en el modelo.
+        if (mvModelo.getGrafo() == null) {
+            progressDialog = new ProgressDialog(requireContext());
+            progressDialog.setMessage("Calculando grafo...");
+            progressDialog.setCancelable(false);
+            progressDialog.show();
 
+            new Thread(() -> {
+                long startTime = System.currentTimeMillis();
 
-        progressDialog = new ProgressDialog(requireContext());
-        progressDialog.setMessage("Calculando grafo...");
-        progressDialog.setCancelable(false);
-        progressDialog.show();
+                grafoCarrilesBici = new GrafoCarrilesBiciOptimizado(requireContext());
+                mvModelo.setGrafo(grafoCarrilesBici);
+                long endTime = System.currentTimeMillis();
+                long duration = endTime - startTime;
+                System.out.println("TiempoEjecucion: grafo tardó: " + duration + " ms");
 
-        new Thread(() -> {
-            long startTime = System.currentTimeMillis();
+                requireActivity().runOnUiThread(() -> {
+                    if (progressDialog != null && progressDialog.isShowing()) {
+                        progressDialog.dismiss();
+                    }
+                });
+            }).start();
+        }
+        else {
+            grafoCarrilesBici = mvModelo.getGrafo();
+        }
 
-            grafoCarrilesBici = new GrafoCarrilesBiciOptimizado(requireContext());
-
-            long endTime = System.currentTimeMillis();
-            long duration = endTime - startTime;
-            System.out.println("TiempoEjecucion: grafo tardó: " + duration + " ms");
-
-            requireActivity().runOnUiThread(() -> {
-                if (progressDialog != null && progressDialog.isShowing()) {
-                    progressDialog.dismiss();
-                }
-            });
-        }).start();
 
 
         mvMapa.setOnTouchListener((v, event) -> false); // necesario para que reciba los clicks
