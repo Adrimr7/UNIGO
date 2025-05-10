@@ -59,7 +59,6 @@ public class GrafoAndar {
 
         long startTime = System.currentTimeMillis();
 
-
         try (InputStream is = context.getAssets().open("grafo.bin");
              ObjectInputStream ois = new ObjectInputStream(is)) {
             Graph<GeoPoint, DefaultWeightedEdge> grafoCargado = (Graph<GeoPoint, DefaultWeightedEdge>) ois.readObject();

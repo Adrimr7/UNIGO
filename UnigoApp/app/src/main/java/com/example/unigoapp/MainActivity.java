@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -16,6 +18,7 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
+import android.widget.Toast;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -37,6 +40,9 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private ImageButton btnIdioma;
+    private boolean estaOffline = false;
+    private Handler handlerConexion;
+    private static final long INTERVALO_COMPROBAR_CONEXION = 60000; // 10 seconds
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +50,9 @@ public class MainActivity extends AppCompatActivity {
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        comprobarConexionInternet();
+        empezarComprobacionesConexion();
 
         // cargar idioma
         String idioma = getSharedPreferences("Ajustes", MODE_PRIVATE).getString("Idioma", "es");
@@ -55,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
         actualizarFragmentos();
         actualizarNavbar();
     }
+
     @Override
     protected void attachBaseContext(Context newBase) {
         // aplicar el idioma antes de que se creen las vistas
@@ -240,6 +250,57 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+    private void comprobarConexionInternet() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo redActiva = connectivityManager.getActiveNetworkInfo();
+        boolean isConnected = redActiva != null && redActiva.isConnectedOrConnecting();
+        if (!estaOffline && isConnected) {
+            System.out.println("INTERNET: Hay conexion");
+        }
+        else if (estaOffline && !isConnected) {
+            System.out.println("INTERNET: No hay conexion.");
+            // todo: merece la pena avisar?
+            Toast.makeText(this, "No hay conexión a Internet. \nLa app sigue funcionando sin conexión.", Toast.LENGTH_LONG).show();
+        }
+        else if (!isConnected) {
+            estaOffline = true;
+            Toast.makeText(this, "Se ha perdido la conexión a Internet.", Toast.LENGTH_LONG).show();
+        } 
+        else {
+            estaOffline = false;
+            Toast.makeText(this, "Se ha recuperado la conexión a Internet.", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void empezarComprobacionesConexion() {
+        handlerConexion = new Handler(Looper.getMainLooper());
+        handlerConexion.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                boolean wasOffline = estaOffline;
+                comprobarConexionInternet();
+                if (wasOffline != estaOffline) {
+                    // Network state has changed, update fragments
+                    actualizarFragmentos();
+                }
+                handlerConexion.postDelayed(this, INTERVALO_COMPROBAR_CONEXION);
+            }
+        }, INTERVALO_COMPROBAR_CONEXION);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (handlerConexion != null) {
+            handlerConexion.removeCallbacksAndMessages(null);
+        }
+    }
+
+    public boolean estaOffline() {
+        return estaOffline;
+    }
+
     // interfaz para definir como son los fragments
     public interface UpdatableFragment {
         void actualizarTextos();
