@@ -212,7 +212,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         mvMapa.getOverlays().add(marker);
         centrarMapaEnGasteiz();
 
-        /*
+
         Thread hiloAndar = new Thread(() -> {
             long startTime = System.currentTimeMillis();
             cargarAndar();
@@ -221,7 +221,8 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
             System.out.println("TiempoEjecucion" + "cargarAndar tarda: " + duration + " ms");
         });
         hiloAndar.start();
-        */
+
+        /*
         Thread hiloBicis = new Thread(() -> {
             long startTime = System.currentTimeMillis();
             cargarCarrilesBici();
@@ -239,7 +240,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
             System.out.println("TiempoEjecucion" + "cargarCarrilesBici tarda: " + duration + " ms");
         });
         hiloBuses.start();
-
+        */
     }
 
     private void centrarMapaEnGasteiz() {
@@ -411,7 +412,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
 
     private void cargarAndar() {
         try {
-            InputStream is = requireContext().getAssets().open("mapaandando_utf8-1.json");
+            InputStream is = requireContext().getAssets().open("mapaandando_utf8.geojson");
             int size = is.available();
             byte[] buffer = new byte[size];
             is.read(buffer);
@@ -497,7 +498,6 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
 
     private void calcularRutaOpcion(String tipo) {
         if (tipo.equals("andar")) {
-            /*
             progressDialog = new ProgressDialog(requireContext());
             progressDialog.setMessage("Calculando ruta andando...");
             progressDialog.setCancelable(false);
@@ -508,11 +508,11 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
                 calcularYMostrarRutaAndando(CENTRO_GASTEIZ);
                 progressDialog.dismiss();
             }, 100);
-            */
             System.out.println("NO IMPLEMENTADO TODAVIA");
 
         }
         else if (tipo.equals("bici")) {
+            /*
             progressDialog = new ProgressDialog(requireContext());
             progressDialog.setMessage("Calculando ruta en bici...");
             progressDialog.setCancelable(false);
@@ -523,8 +523,11 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
                 calcularYMostrarRutaBici(CENTRO_GASTEIZ);
                 progressDialog.dismiss();
             }, 100);
+
+             */
         }
         else if (tipo.equals("bus")) {
+            /*
             progressDialog = new ProgressDialog(requireContext());
             progressDialog.setMessage("Calculando ruta en bus...");
             progressDialog.setCancelable(false);
@@ -535,6 +538,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
                 calcularYMostrarRutaBus(CENTRO_GASTEIZ);
                 progressDialog.dismiss();
             }, 100);
+            */
         }
     }
 }
