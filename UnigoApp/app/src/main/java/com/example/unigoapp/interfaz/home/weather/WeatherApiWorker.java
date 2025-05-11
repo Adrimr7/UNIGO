@@ -15,16 +15,17 @@ import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.KeyFactory;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
@@ -88,8 +89,13 @@ public class WeatherApiWorker extends Worker {
 
     public String weather_api_call(String token){
         try {
-            String endpoint = "https://opendata.euskadi.eus/api-euskalmet/-/api-de-euskalmet/forecast/7days/Vitoria-Gasteiz"; // Reemplaza con el endpoint correcto
+            LocalDate fechaActual = LocalDate.now();
+            String dia = fechaActual.format(DateTimeFormatter.ofPattern("dd"));
+            String mes = fechaActual.format(DateTimeFormatter.ofPattern("MM"));
+            String anio = fechaActual.format(DateTimeFormatter.ofPattern("yyyy"));
 
+            String endpoint = "https://api.euskadi.eus/euskalmet/weather/regions/basque_country/zones/vitoria_gasteiz/locations/gasteiz/forecast/at/"+anio+"/"+mes+"/"+dia+"/for/"+anio+mes+dia; // Reemplaza con el endpoint correcto
+            Log.i("la url","URL:" + endpoint);
             URL url = new URL(endpoint);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestProperty("Authorization", "Bearer " + token);
@@ -126,9 +132,16 @@ public class WeatherApiWorker extends Worker {
 
     public String generate_JwtToken() {
         try {
-            // Cargar la clave privada desde un archivo PEM
-            String privateKeyPem = new String(Files.readAllBytes(Paths.get("ruta/a/tu/clave_privada.pem")));
-            privateKeyPem = privateKeyPem
+            // Cargar la clave privada desde assets
+            InputStream inputStream = getApplicationContext().getAssets().open("privateKey.pem");
+            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+            StringBuilder stringBuilder = new StringBuilder();
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                stringBuilder.append(line).append("\n");
+            }
+            String privateKeyPem = stringBuilder.toString()
                     .replace("-----BEGIN PRIVATE KEY-----", "")
                     .replace("-----END PRIVATE KEY-----", "")
                     .replaceAll("\\s+", "");
@@ -141,11 +154,14 @@ public class WeatherApiWorker extends Worker {
             long nowMillis = System.currentTimeMillis();
             Date now = new Date(nowMillis);
             Date exp = new Date(nowMillis + 3600_000); // 1 hora de validez
-            Dotenv dotenv = Dotenv.load();
-            String email = dotenv.get("Email");
+            Dotenv dotenv = Dotenv.configure()
+                    .directory("/assets")
+                    .filename("env") // Nombre del archivo sin el punto inicial
+                    .load();
+            String email = dotenv.get("EMAIL");
             // Crear el token JWT
             String token = JWT.create()
-                    .withIssuer("unigoappEib")
+                    .withIssuer("sampleApp")
                     .withAudience("met01.apikey")
                     .withClaim("email", email) // Reemplaza con tu correo
                     .withClaim("version", "1.0.0")
