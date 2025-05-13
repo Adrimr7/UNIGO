@@ -67,8 +67,6 @@ public class WeatherApiWorker extends Worker {
             JSONObject temperature = json.getJSONObject("temperature");
             JSONObject forecastText = json.getJSONObject("forecastText");
 
-
-
             // Extraer valores mínimo y máximo
             double tempMin = temperatureRange.getDouble("min");
             double tempMax = temperatureRange.getDouble("max");

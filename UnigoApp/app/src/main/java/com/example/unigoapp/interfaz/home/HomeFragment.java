@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -33,6 +34,7 @@ public class HomeFragment extends Fragment implements MainActivity.UpdatableFrag
     private TextView tvforecast;
     private TextView tvOfflineAir;
     private TextView tvAirQuality;
+    private ImageView ivWeather;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -49,6 +51,7 @@ public class HomeFragment extends Fragment implements MainActivity.UpdatableFrag
         tvNowtemp = binding.nowTempText;
         tvforecast = binding.forecast;
         tvAirQuality = binding.airQuallityText;
+        ivWeather = binding.weatherImg;
 
         tvOfflineAir = binding.disabledTextAir;
 
@@ -130,9 +133,9 @@ public class HomeFragment extends Fragment implements MainActivity.UpdatableFrag
         Context context = getContext();
         SharedPreferences prefs = context.getSharedPreferences("weather", Context.MODE_PRIVATE);
 
-        float tempMin = prefs.getFloat("temp_min", -99);
-        float tempMax = prefs.getFloat("temp_max", -99);
-        float tempNow = prefs.getFloat("temp_now", -99);
+        int tempMin = (int) prefs.getFloat("temp_min", -99);
+        int tempMax = (int) prefs.getFloat("temp_max", -99);
+        int tempNow = (int) prefs.getFloat("temp_now", -99);
 
         String forecastEs = prefs.getString("esp_txt", null);
         String forecastEu = prefs.getString("eusk_txt", null);
@@ -151,11 +154,27 @@ public class HomeFragment extends Fragment implements MainActivity.UpdatableFrag
             tvMintemp.setVisibility(View.INVISIBLE);
             tvforecast.setVisibility(View.INVISIBLE);
         } else{
+            selectWeatherIcon(forecastEs);
             tvOfflineWeather.setVisibility(View.INVISIBLE);
-            tvNowtemp.setText(String.valueOf(tempNow));
-            tvMaxTemp.setText(String.valueOf(tempMax));
-            tvMintemp.setText(String.valueOf(tempMin));
+            tvNowtemp.setText(String.valueOf(tempNow)+"ºC");
+            tvMaxTemp.setText(String.valueOf(tempMax)+"º");
+            tvMintemp.setText(String.valueOf(tempMin)+"º");
             tvforecast.setText(String.valueOf(forecastEs));
+        }
+
+    }
+
+    private void selectWeatherIcon(String forecast){
+        if (forecast.contains("nub")){
+            ivWeather.setImageResource(R.drawable.cloud);
+        } else if (forecast.contains("chub") || (forecast.contains("lluv"))) {
+            ivWeather.setImageResource(R.drawable.rain);
+        } else if (forecast.contains("sol")){
+            ivWeather.setImageResource(R.drawable.sun);
+        } else if (forecast.contains("torm")){
+            ivWeather.setImageResource(R.drawable.storm);
+        } else{
+            ivWeather.setImageResource(R.drawable.sun);
         }
 
     }
