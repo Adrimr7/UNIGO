@@ -255,14 +255,14 @@ public class MainActivity extends AppCompatActivity {
             System.out.println("INTERNET: Hay conexion");
         }
         else if (estaOffline && !isConnected) {
-            System.out.println("INTERNET: Sigue sin haber conexion.");
+            System.out.println("INTERNET: No hay conexion.");
             // todo: merece la pena avisar?
-            //Toast.makeText(this, "No hay conexión a Internet. \nLa app sigue funcionando sin conexión.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "No hay conexión a Internet. \nLa app sigue funcionando sin conexión.", Toast.LENGTH_LONG).show();
         }
         else if (!isConnected) {
             estaOffline = true;
             Toast.makeText(this, "Se ha perdido la conexión a Internet.", Toast.LENGTH_LONG).show();
-        } 
+        }
         else {
             estaOffline = false;
             Toast.makeText(this, "Se ha recuperado la conexión a Internet.", Toast.LENGTH_LONG).show();
