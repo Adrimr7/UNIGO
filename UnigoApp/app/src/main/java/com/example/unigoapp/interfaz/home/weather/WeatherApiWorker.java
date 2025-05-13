@@ -1,6 +1,7 @@
 package com.example.unigoapp.interfaz.home.weather;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -31,6 +32,7 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 import io.github.cdimascio.dotenv.Dotenv;
+import org.json.JSONObject;
 
 
 public class WeatherApiWorker extends Worker {
@@ -58,27 +60,36 @@ public class WeatherApiWorker extends Worker {
 
     public boolean save_data(String jsonResponse) {
         try {
-            JSONObject jsonObject = new JSONObject(jsonResponse);
-            JSONArray forecastArray = jsonObject.getJSONArray("forecast");
+            JSONObject json = new JSONObject(jsonResponse);
 
-            List<ForecastDay> forecastList = new ArrayList<>();
+            // Acceder al objeto temperatureRange
+            JSONObject temperatureRange = json.getJSONObject("temperatureRange");
+            JSONObject temperature = json.getJSONObject("temperature");
+            JSONObject forecastText = json.getJSONObject("forecastText");
 
-            for (int i = 0; i < forecastArray.length(); i++) {
-                JSONObject dayForecast = forecastArray.getJSONObject(i);
 
-                String date = dayForecast.getString("date");
-                JSONObject temperature = dayForecast.getJSONObject("temperature");
-                double minTemp = temperature.getDouble("min");
-                double maxTemp = temperature.getDouble("max");
-                String weatherDescription = dayForecast.getString("weather");
-                double precipitation = dayForecast.getDouble("precipitation");
 
-                ForecastDay forecastDay = new ForecastDay(date, minTemp, maxTemp, weatherDescription, precipitation);
-                forecastList.add(forecastDay);
-            }
+            // Extraer valores mínimo y máximo
+            double tempMin = temperatureRange.getDouble("min");
+            double tempMax = temperatureRange.getDouble("max");
+            double tempNow = temperature.getDouble("value");
 
-            // Almacenar la lista en el singleton
-            WeatherData.getInstance().setForecastList(forecastList);
+            // Obtener los textos en español y euskera
+            String textoEspanol = forecastText.getString("SPANISH");
+            String textoEuskera = forecastText.getString("BASQUE");
+
+            //Guardamos los datos en shared preferences
+            Context context = getApplicationContext();
+            SharedPreferences prefs = context.getSharedPreferences("weather", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = prefs.edit();
+
+            editor.putFloat("temp_min", (float) tempMin);
+            editor.putFloat("temp_max", (float) tempMax);
+            editor.putFloat("temp_now", (float) tempNow);
+            editor.putString("esp_txt", textoEspanol);
+            editor.putString("eusk_txt", textoEuskera);
+
+            editor.apply();
             return true;
 
         } catch (Exception e) {
