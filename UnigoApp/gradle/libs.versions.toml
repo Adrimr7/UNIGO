@@ -18,6 +18,7 @@ navigationFragment = "2.8.9"
 navigationUi = "2.8.9"
 osmdroidAndroid = "6.1.13"
 preference = "1.2.1"
+workRuntimeKtx = "2.9.0"
 
 [libraries]
 geotools-gt-main = { module = "org.geotools:gt-main", version.ref = "gtMainVersion" }
@@ -38,6 +39,7 @@ navigation-fragment = { group = "androidx.navigation", name = "navigation-fragme
 navigation-ui = { group = "androidx.navigation", name = "navigation-ui", version.ref = "navigationUi" }
 osmdroid-android = { module = "org.osmdroid:osmdroid-android", version.ref = "osmdroidAndroid" }
 preference = { module = "androidx.preference:preference", version.ref = "preference" }
+work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

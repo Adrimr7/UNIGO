@@ -14,7 +14,6 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.PopupMenu;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
@@ -28,6 +27,7 @@ import com.example.unigoapp.databinding.FragmentMapaBinding;
 import com.example.unigoapp.interfaz.mapa.andar.GrafoAndar;
 import com.example.unigoapp.interfaz.mapa.bici.GrafoCarrilesBiciOptimizado;
 import com.example.unigoapp.interfaz.mapa.bus.GrafoBus;
+import com.example.unigoapp.utils.ToastPersonalizado;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.json.JSONArray;
@@ -292,7 +292,8 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         boolean isOffline = ((MainActivity) requireActivity()).estaOffline();
         mvMapa.setUseDataConnection(!isOffline);
         if (isOffline) {
-            Toast.makeText(requireContext(), "Mapa en modo sin conexión", Toast.LENGTH_SHORT).show();
+            ToastPersonalizado.showToast(requireContext(), "Mapa en modo sin conexión");
+            //Toast.makeText(requireContext(), "Mapa en modo sin conexión", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -580,9 +581,9 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
     private void activarModoOffline(boolean offline) {
         mvMapa.setUseDataConnection(!offline);
         if (offline) {
-            Toast.makeText(requireContext(), "Modo sin conexión activado", Toast.LENGTH_SHORT).show();
+            ToastPersonalizado.showToast(requireContext(), "Modo sin conexión activado");
         } else {
-            Toast.makeText(requireContext(), "Modo en línea activado", Toast.LENGTH_SHORT).show();
+            ToastPersonalizado.showToast(requireContext(), "Modo en línea activado");
         }
     }
 }

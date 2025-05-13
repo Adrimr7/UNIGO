@@ -20,6 +20,7 @@ import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
+import com.example.unigoapp.utils.ToastPersonalizado;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import androidx.annotation.NonNull;
@@ -255,17 +256,18 @@ public class MainActivity extends AppCompatActivity {
             System.out.println("INTERNET: Hay conexion");
         }
         else if (estaOffline && !isConnected) {
-            System.out.println("INTERNET: No hay conexion.");
-            // todo: merece la pena avisar?
-            Toast.makeText(this, "No hay conexión a Internet. \nLa app sigue funcionando sin conexión.", Toast.LENGTH_LONG).show();
+            System.out.println("INTERNET: Sigue sin haber conexion.");
+            //Toast.makeText(this, "No hay conexión a Internet. \nLa app sigue funcionando sin conexión.", Toast.LENGTH_LONG).show();
         }
         else if (!isConnected) {
             estaOffline = true;
-            Toast.makeText(this, "Se ha perdido la conexión a Internet.", Toast.LENGTH_LONG).show();
-        }
+            ToastPersonalizado.showToast(this,"Se ha perdido la conexión a Internet.");
+            //Toast.makeText(this, "Se ha perdido la conexión a Internet.", Toast.LENGTH_LONG).show();
+        } 
         else {
             estaOffline = false;
-            Toast.makeText(this, "Se ha recuperado la conexión a Internet.", Toast.LENGTH_LONG).show();
+            ToastPersonalizado.showToast(this, "Se ha recuperado la conexión a Internet.");
+            //Toast.makeText(this, "Se ha recuperado la conexión a Internet.", Toast.LENGTH_LONG).show();
         }
     }
 

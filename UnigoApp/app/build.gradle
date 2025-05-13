@@ -47,7 +47,7 @@ dependencies {
     implementation libs.preference
     implementation libs.jgrapht.core
     implementation 'com.auth0:java-jwt:4.5.0'
-    implementation("androidx.work:work-runtime-ktx:2.9.0")
+    implementation libs.work.runtime.ktx
     implementation 'io.github.cdimascio:dotenv-java:3.2.0'
 
 }

@@ -10,6 +10,7 @@
     <string name="texto_home">Hau hasiera fragment da</string>
     <string name="texto_mapa">Hau mapa fragment da</string>
     <string name="texto_perfil">Hau profil fragment da</string>
+    <string name="cambiar_idioma">Hizkuntza aldatu</string>
     <string name="opciones_ruta">Ibilbidea</string>
     <string name="caminar">Oinez</string>
     <string name="en_bici">Bizikletaz</string>
