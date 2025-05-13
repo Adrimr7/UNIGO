@@ -27,7 +27,7 @@
         <item name="cardElevation">2dp</item>
         <item name="cardCornerRadius">12dp</item>
         <item name="contentPadding">16dp</item>
-        <item name="cardBackgroundColor">@color/secondary</item>
+        <item name="cardBackgroundColor">@color/secondary_dark</item>
     </style>
 
     <!-- textos -->
