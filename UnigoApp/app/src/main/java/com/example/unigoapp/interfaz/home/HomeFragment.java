@@ -30,12 +30,33 @@ public class HomeFragment extends Fragment implements MainActivity.UpdatableFrag
     private TextView tvMintemp;
     private TextView tvNowtemp;
     private TextView tvforecast;
+    //private MapaVistaModelo mvModelo;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         System.out.println("HomeFrag: onCreateView");
         HomeVistaModelo homeVistaModelo =
                 new ViewModelProvider(this).get(HomeVistaModelo.class);
+
+
+        // cargar el grafo de andar en segundo plano
+        // importante que no influya en total
+
+        /*
+        mvModelo = new ViewModelProvider(this).get(MapaVistaModelo.class);
+
+        new Thread(() -> {
+            System.out.println("Iniciando carga de Grafo...");
+            long tiempoInicio = System.currentTimeMillis();
+            mvModelo.setCargandoGrafoAndar(true);
+            mvModelo.setGrafoAndar(new GrafoAndar(getContext()));
+            long tiempoFin = System.currentTimeMillis();
+            long duracion = tiempoFin - tiempoInicio;
+            System.out.println("TiempoEjecucion: grafo ANDAR tardó: " + duracion + " ms");
+            mvModelo.setCargandoGrafoAndar(false);
+        }).start();
+
+         */
 
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
@@ -48,33 +69,40 @@ public class HomeFragment extends Fragment implements MainActivity.UpdatableFrag
 
         tvHome = binding.tvHome;
         homeVistaModelo.getText().observe(getViewLifecycleOwner(), tvHome::setText);
-        callWorker();
+        // comprobar si hay conexion, si no hay conexion no llamar a callworker
+        MainActivity mainActivity = (MainActivity) requireActivity();
+        if (mainActivity.estaOffline()){
+            // no llamar al worker, poner texto por defecto
+        }
+        else {
+            callWorker();
+        }
+
         return root;
     }
 
     public void callWorker(){
-        // Crear la solicitud de trabajo
+        // crear el worker request y enviarlo
         OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(WeatherApiWorker.class)
                 .build();
-
-        // Obtener WorkManager y enviar el trabajo
         WorkManager.getInstance(requireContext())
                 .enqueue(workRequest);
 
-        // Observar el resultado usando el LifecycleOwner del Fragment
+        // obtener el resultado del worker
         WorkManager.getInstance(requireContext())
                 .getWorkInfoByIdLiveData(workRequest.getId())
                 .observe(getViewLifecycleOwner(), workInfo -> {
                     if (workInfo != null && workInfo.getState() == WorkInfo.State.SUCCEEDED) {
-                        Log.d("info", "Succes---------------------------------------------------------------------");
-                        updateWeather();
-                    }else{
+                        Log.d("info", "Success---------------------------------------------------------------------");
+                        actualizarTiempo();
+                    }
+                    else{
                         Log.e("WORKER", "Error--------------------------------------------------------------------");
                     }
                 });
     }
 
-    public void updateWeather(){
+    public void actualizarTiempo(){
         Context context = getContext();
         SharedPreferences prefs = context.getSharedPreferences("weather", Context.MODE_PRIVATE);
 

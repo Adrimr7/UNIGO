@@ -28,6 +28,7 @@ import com.example.unigoapp.interfaz.mapa.andar.GrafoAndar;
 import com.example.unigoapp.interfaz.mapa.bici.GrafoCarrilesBiciOptimizado;
 import com.example.unigoapp.interfaz.mapa.bus.GrafoBus;
 import com.example.unigoapp.utils.ToastPersonalizado;
+import com.example.unigoapp.interfaz.mapa.GrafosSingleton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.json.JSONArray;
@@ -53,7 +54,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.io.File;
 
-
 public class MapaFragment extends Fragment implements MainActivity.UpdatableFragment {
 
     private FragmentMapaBinding binding;
@@ -72,8 +72,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         System.out.println("MapaFrag: onCreateView");
-        MapaVistaModelo mapaVistaModelo =
-                new ViewModelProvider(this).get(MapaVistaModelo.class);
+        MapaVistaModelo mapaVistaModelo = new ViewModelProvider(this).get(MapaVistaModelo.class);
 
         binding = FragmentMapaBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
@@ -87,61 +86,31 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         Configuration.getInstance().load(getContext(), PreferenceManager.getDefaultSharedPreferences(getContext()));
 
         ImageButton btnCenter = root.findViewById(R.id.btn_center);
-
-        configurarMapa();
-        System.out.println("Mapa configurado");
-        comprobarPermisoUbicacion();
-
-        MapaVistaModelo mvModelo = new ViewModelProvider(requireActivity()).get(MapaVistaModelo.class);
-
         btnCenter.setOnClickListener(v -> centrarMapaEnGasteiz());
 
-        // grafo de bicis y buses
-        if (mvModelo.getGrafoBus() == null || mvModelo.getGrafoBici() == null) {
-            progressDialog = new ProgressDialog(requireContext());
-            progressDialog.setMessage("Calculando grafo de andar...");
-            progressDialog.setCancelable(false);
-            progressDialog.show();
+        // Initialize graphs using GrafosSingleton
+        progressDialog = new ProgressDialog(requireContext());
+        progressDialog.setMessage("Cargando grafos...");
+        progressDialog.setCancelable(false);
+        progressDialog.show();
 
-            new Thread(() -> {
+        new Thread(() -> {
+            long startTime = System.currentTimeMillis();
 
-                long startTime = System.currentTimeMillis();
-                /*
-                grafoAndar = new GrafoAndar(requireContext());
-                mvModelo.setGrafoAndar(grafoAndar);
-                long endTime = System.currentTimeMillis();
-                long duration = endTime - startTime;
-                System.out.println("TiempoEjecucion: grafo ANDAR tardó: " + duration + " ms");
-                */
+            // Get graphs from singleton
+            grafoBuses = GrafosSingleton.getGrafoBuses(requireContext());
+            grafoCarrilesBici = GrafosSingleton.getGrafoBici(requireContext());
+            grafoAndar = GrafosSingleton.getGrafoAndar(requireContext());
 
-                progressDialog.setMessage("Calculando grafo de buses...");
-                startTime = System.currentTimeMillis();
-                grafoBuses = new GrafoBus(requireContext());
-                mvModelo.setGrafoBus(grafoBuses);
-                long endTime = System.currentTimeMillis();
-                long duration = endTime - startTime;
-                System.out.println("TiempoEjecucion: grafo BUSES tardó: " + duration + " ms");
+            long endTime = System.currentTimeMillis();
+            System.out.println("TiempoEjecucion: Grafos cargados en " + (endTime - startTime) + " ms");
 
-                progressDialog.setMessage("Calculando grafo de bicis...");
-                grafoCarrilesBici = new GrafoCarrilesBiciOptimizado(requireContext());
-                mvModelo.setGrafoBici(grafoCarrilesBici);
-                endTime = System.currentTimeMillis();
-                duration = endTime - startTime;
-                System.out.println("TiempoEjecucion: grafo BICI tardó: " + duration + " ms");
-
-                requireActivity().runOnUiThread(() -> {
-                    if (progressDialog != null && progressDialog.isShowing()) {
-                        progressDialog.dismiss();
-                    }
-                });
-            }).start();
-        }
-        else {
-            grafoBuses = mvModelo.getGrafoBus();
-            grafoCarrilesBici = mvModelo.getGrafoBici();
-            grafoAndar = mvModelo.getGrafoAndar();
-        }
-
+            requireActivity().runOnUiThread(() -> {
+                if (progressDialog != null && progressDialog.isShowing()) {
+                    progressDialog.dismiss();
+                }
+            });
+        }).start();
 
         mvMapa.setOnTouchListener((v, event) -> false); // necesario para que reciba los clicks
         mvMapa.getOverlays().add(new MapEventsOverlay(requireContext(), new MapEventsReceiver() {
@@ -159,6 +128,10 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         }));
 
         fabOpciones.setOnClickListener(this::mostrarOpcionesRuta);
+        
+        configurarMapa();
+        System.out.println("Mapa configurado");
+        comprobarPermisoUbicacion();
 
         return root;
     }
@@ -288,12 +261,11 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         System.out.println("MapaFrag: actualizarTextos");
         tvMapa.setText("");
 
-        // Check if network state has changed
+        // checkear si ha cambiado el estado
         boolean isOffline = ((MainActivity) requireActivity()).estaOffline();
         mvMapa.setUseDataConnection(!isOffline);
         if (isOffline) {
             ToastPersonalizado.showToast(requireContext(), "Mapa en modo sin conexión");
-            //Toast.makeText(requireContext(), "Mapa en modo sin conexión", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -399,7 +371,6 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         mvMapa.getOverlays().add(rutaActual);
         mvMapa.invalidate();
     }
-
 
     private void cargarBuses() {
         try {
@@ -532,8 +503,8 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
     }
 
     private void calcularRutaOpcion(String tipo) {
+        // comprobar si el grafo esta ya cargado
         if (tipo.equals("andar")) {
-            /*
             progressDialog = new ProgressDialog(requireContext());
             progressDialog.setMessage("Calculando ruta andando...");
             progressDialog.setCancelable(false);
@@ -545,7 +516,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
                 progressDialog.dismiss();
             }, 100);
             System.out.println("NO IMPLEMENTADO TODAVIA");
-            */
+
         }
         else if (tipo.equals("bici")) {
 

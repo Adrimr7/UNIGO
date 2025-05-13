@@ -10,20 +10,16 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
-import android.widget.Toast;
 
 import com.example.unigoapp.utils.ToastPersonalizado;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.menu.MenuBuilder;
 import androidx.appcompat.widget.Toolbar;
@@ -41,9 +37,10 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private ImageButton btnIdioma;
-    private boolean estaOffline = false;
+    private boolean estaOffline = true;
     private Handler handlerConexion;
     private static final long INTERVALO_COMPROBAR_CONEXION = 2000; // 2 segs
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

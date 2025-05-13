@@ -3,7 +3,7 @@
     <style name="Theme.UnigoApp" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Colors -->
         <item name="colorPrimary">@color/primary</item>
-        <item name="colorPrimaryVariant">@color/primary_variant</item>
+        <item name="colorPrimaryVariant">@color/primary</item>
         <item name="colorPrimaryDark">@color/primary_dark</item>
         <item name="colorOnPrimary">@color/text_on_primary</item>
         <item name="colorSecondary">@color/secondary</item>
