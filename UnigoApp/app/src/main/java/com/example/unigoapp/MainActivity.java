@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageButton btnIdioma;
     private boolean estaOffline = false;
     private Handler handlerConexion;
-    private static final long INTERVALO_COMPROBAR_CONEXION = 60000; // 10 seconds
+    private static final long INTERVALO_COMPROBAR_CONEXION = 2000; // 2 segs
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -204,10 +204,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private String obtenerIdiomaGuardado() {
-        return getSharedPreferences("Ajustes", MODE_PRIVATE).getString("Idioma", "es");
-    }
-
     private void actualizarFragmentos() {
         System.out.println("MainActivity: actualizarFragmentos");
         // obtener el fragment actual y actualizar sus textos
@@ -278,10 +274,10 @@ public class MainActivity extends AppCompatActivity {
         handlerConexion.postDelayed(new Runnable() {
             @Override
             public void run() {
-                boolean wasOffline = estaOffline;
+                boolean estabaOffline = estaOffline;
                 comprobarConexionInternet();
-                if (wasOffline != estaOffline) {
-                    // Network state has changed, update fragments
+                if (estabaOffline != estaOffline) {
+                    // actualizar fragmentos porque no hay conexion
                     actualizarFragmentos();
                 }
                 handlerConexion.postDelayed(this, INTERVALO_COMPROBAR_CONEXION);

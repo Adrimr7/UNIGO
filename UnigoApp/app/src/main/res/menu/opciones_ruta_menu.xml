@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/opcion_caminar"
+        android:title="@string/caminar"/>
+    <item
+        android:id="@+id/opcion_bici"
+        android:title="@string/en_bici"/>
+    <item
+        android:id="@+id/opcion_bus"
+        android:title="@string/en_bus"/>
+</menu>
