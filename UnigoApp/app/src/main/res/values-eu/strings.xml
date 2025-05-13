@@ -4,10 +4,14 @@
     <string name="titulo_home">Hasiera</string>
     <string name="titulo_mapa">Mapa</string>
     <string name="titulo_perfil">Nire Profila</string>
-    <string name="castellano">Castellano</string>
-    <string name="euskera">Euskera</string>
-    <string name="english">English</string>
+    <string name="castellano">Gaztelania</string>
+    <string name="euskera">Euskara</string>
+    <string name="english">Ingelesa</string>
     <string name="texto_home">Hau hasiera fragment da</string>
     <string name="texto_mapa">Hau mapa fragment da</string>
     <string name="texto_perfil">Hau profil fragment da</string>
+    <string name="opciones_ruta">Ibilbidea</string>
+    <string name="caminar">Oinez</string>
+    <string name="en_bici">Bizikletaz</string>
+    <string name="en_bus">Autobusez</string>
 </resources>
