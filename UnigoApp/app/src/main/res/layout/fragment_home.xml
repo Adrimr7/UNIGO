@@ -104,8 +104,12 @@
                 android:layout_height="89dp"
                 android:scaleType="fitXY"
                 android:src="@drawable/cloud"
-                tools:layout_editor_absoluteX="28dp"
-                tools:layout_editor_absoluteY="16dp" />
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.069"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.048" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
