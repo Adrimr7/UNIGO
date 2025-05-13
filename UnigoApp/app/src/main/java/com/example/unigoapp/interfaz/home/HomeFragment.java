@@ -19,17 +19,20 @@ import androidx.work.WorkManager;
 import com.example.unigoapp.MainActivity;
 import com.example.unigoapp.R;
 import com.example.unigoapp.databinding.FragmentHomeBinding;
+import com.example.unigoapp.interfaz.home.weather.AirApiWorker;
 import com.example.unigoapp.interfaz.home.weather.WeatherApiWorker;
 
 public class HomeFragment extends Fragment implements MainActivity.UpdatableFragment {
 
     private FragmentHomeBinding binding;
     private TextView tvHome;
-    private TextView tvOffline;
+    private TextView tvOfflineWeather;
     private TextView tvMaxTemp;
     private TextView tvMintemp;
     private TextView tvNowtemp;
     private TextView tvforecast;
+    private TextView tvOfflineAir;
+    private TextView tvAirQuality;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -40,19 +43,68 @@ public class HomeFragment extends Fragment implements MainActivity.UpdatableFrag
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
-        tvOffline = binding.disabledText;
+        tvOfflineWeather = binding.disabledTextWeather;
         tvMaxTemp = binding.maxTempText;
         tvMintemp = binding.minTempText;
         tvNowtemp = binding.nowTempText;
         tvforecast = binding.forecast;
+        tvAirQuality = binding.airQuallityText;
 
-        tvHome = binding.tvHome;
-        homeVistaModelo.getText().observe(getViewLifecycleOwner(), tvHome::setText);
-        callWorker();
+        tvOfflineAir = binding.disabledTextAir;
+
+        //homeVistaModelo.getText().observe(getViewLifecycleOwner(), tvHome::setText);
+        callWeatherWorker();
+        callAirWorker();
         return root;
     }
 
-    public void callWorker(){
+    private void callAirWorker(){
+        // Crear la solicitud de trabajo
+        OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(AirApiWorker.class)
+                .build();
+
+        // Obtener WorkManager y enviar el trabajo
+        WorkManager.getInstance(requireContext())
+                .enqueue(workRequest);
+
+        // Observar el resultado usando el LifecycleOwner del Fragment
+        WorkManager.getInstance(requireContext())
+                .getWorkInfoByIdLiveData(workRequest.getId())
+                .observe(getViewLifecycleOwner(), workInfo -> {
+                    if (workInfo != null && workInfo.getState() == WorkInfo.State.SUCCEEDED) {
+                        Log.d("info", "Succes---------------------------------------------------------------------");
+                        updateAir();
+                    }else{
+                        Log.e("WORKER", "Error--------------------------------------------------------------------");
+                    }
+                });
+    }
+
+    private void updateAir(){
+        Context context = getContext();
+
+        SharedPreferences airPrefs = context.getSharedPreferences("air", Context.MODE_PRIVATE);
+
+        String quality = airPrefs.getString("quality", null);
+
+        Boolean offline = ((MainActivity) requireActivity()).estaOffline();
+
+        Log.e("ONLINE","ESTADO: " + offline);
+        Log.e("AIRE","CALIDAD: " + quality);
+
+
+        if ((offline) || quality == null){
+            tvOfflineAir.setVisibility(View.VISIBLE);
+            tvAirQuality.setVisibility(View.INVISIBLE);
+        } else{
+            tvOfflineAir.setVisibility(View.INVISIBLE);
+            tvAirQuality.setVisibility(View.VISIBLE);
+            tvAirQuality.setText(quality);
+
+        }
+    }
+
+    private void callWeatherWorker(){
         // Crear la solicitud de trabajo
         OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(WeatherApiWorker.class)
                 .build();
@@ -82,8 +134,8 @@ public class HomeFragment extends Fragment implements MainActivity.UpdatableFrag
         float tempMax = prefs.getFloat("temp_max", -99);
         float tempNow = prefs.getFloat("temp_now", -99);
 
-        String forecastEs = prefs.getString("forecast_es", null);
-        String forecastEu = prefs.getString("forecast_eu", null);
+        String forecastEs = prefs.getString("esp_txt", null);
+        String forecastEu = prefs.getString("eusk_txt", null);
 
         Boolean offline = ((MainActivity) requireActivity()).estaOffline();
 
@@ -93,13 +145,13 @@ public class HomeFragment extends Fragment implements MainActivity.UpdatableFrag
 
         if ((offline) || tempMax == -99){
 
-            tvOffline.setVisibility(View.VISIBLE);
+            tvOfflineWeather.setVisibility(View.VISIBLE);
             tvNowtemp.setVisibility(View.INVISIBLE);
             tvMaxTemp.setVisibility(View.INVISIBLE);
             tvMintemp.setVisibility(View.INVISIBLE);
             tvforecast.setVisibility(View.INVISIBLE);
         } else{
-            tvOffline.setVisibility(View.INVISIBLE);
+            tvOfflineWeather.setVisibility(View.INVISIBLE);
             tvNowtemp.setText(String.valueOf(tempNow));
             tvMaxTemp.setText(String.valueOf(tempMax));
             tvMintemp.setText(String.valueOf(tempMin));
@@ -116,6 +168,6 @@ public class HomeFragment extends Fragment implements MainActivity.UpdatableFrag
     @Override
     public void actualizarTextos() {
         System.out.println("HomeFrag: actualizarTextos");
-        tvHome.setText(R.string.texto_home);
+        //tvHome.setText(R.string.texto_home);
     }
 }

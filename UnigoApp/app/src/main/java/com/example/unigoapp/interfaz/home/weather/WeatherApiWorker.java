@@ -58,7 +58,7 @@ public class WeatherApiWorker extends Worker {
         return Result.success();
     }
 
-    public boolean save_data(String jsonResponse) {
+    private boolean save_data(String jsonResponse) {
         try {
             JSONObject json = new JSONObject(jsonResponse);
 
@@ -98,7 +98,7 @@ public class WeatherApiWorker extends Worker {
         }
     }
 
-    public String weather_api_call(String token){
+    private String weather_api_call(String token){
         try {
             LocalDate fechaActual = LocalDate.now();
             String dia = fechaActual.format(DateTimeFormatter.ofPattern("dd"));
@@ -141,7 +141,7 @@ public class WeatherApiWorker extends Worker {
         }
     }
 
-    public String generate_JwtToken() {
+    private String generate_JwtToken() {
         try {
             // Cargar la clave privada desde assets
             InputStream inputStream = getApplicationContext().getAssets().open("privateKey.pem");
