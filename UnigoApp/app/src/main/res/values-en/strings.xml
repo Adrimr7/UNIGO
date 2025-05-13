@@ -15,4 +15,12 @@
     <string name="caminar">Walking</string>
     <string name="en_bici">With a Bike</string>
     <string name="en_bus">By Bus</string>
+    <string name="cargando_grafos">Loading graphs...</string>
+    <string name="permiso_ubi">Location permission</string>
+    <string name="acceso_ubi">Necesitamos acceso a tu ubicación para mostrarte rutas precisas</string>
+    <string name="entendido">Understood</string>
+    <string name="mapa_sin_conexion">No connection map mode</string>
+    <string name="calc_andando">Loading walking route...</string>
+    <string name="calc_bici">Loading bike route...</string>
+    <string name="calc_bus">Loading bus route...</string>
 </resources>

@@ -19,7 +19,6 @@ public class PerfilFragment extends Fragment implements MainActivity.UpdatableFr
 
     private FragmentPerfilBinding binding;
     private CardView cvIdioma;
-    //private TextView tvPerfil;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -32,8 +31,7 @@ public class PerfilFragment extends Fragment implements MainActivity.UpdatableFr
         View root = binding.getRoot();
         cvIdioma = binding.languageCard;
 
-        //tvPerfil = binding.tvPerfil;
-        //perfilVistaModelo.getText().observe(getViewLifecycleOwner(), tvPerfil::setText);
+
         return root;
     }
 
@@ -46,6 +44,5 @@ public class PerfilFragment extends Fragment implements MainActivity.UpdatableFr
     @Override
     public void actualizarTextos() {
         System.out.println("PerfilFrag: actualizarTextos");
-        //tvPerfil.setText(R.string.texto_perfil);
     }
 }

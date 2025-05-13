@@ -17,6 +17,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 
+import com.example.unigoapp.interfaz.mapa.GrafosSingleton;
 import com.example.unigoapp.utils.ToastPersonalizado;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -51,6 +52,26 @@ public class MainActivity extends AppCompatActivity {
 
         comprobarConexionInternet();
         empezarComprobacionesConexion();
+
+        long tiempoInicio = System.currentTimeMillis();
+        // hilo andar
+        new Thread(() -> {
+            GrafosSingleton.getGrafoAndar(this);
+            long endTime = System.currentTimeMillis();
+            System.out.println("TiempoEjecucion: Grafo ANDAR cargados en " + (endTime - tiempoInicio) + " ms");
+        }).start();
+        // hilo buses
+        new Thread(() -> {
+            GrafosSingleton.getGrafoBuses(this);
+            long endTime = System.currentTimeMillis();
+            System.out.println("TiempoEjecucion: Grafos cargados en " + (endTime - tiempoInicio) + " ms");
+        }).start();
+        // hilo bici
+        new Thread(() -> {
+            GrafosSingleton.getGrafoBici(this);
+            long endTime = System.currentTimeMillis();
+            System.out.println("TiempoEjecucion: Grafos cargados en " + (endTime - tiempoInicio) + " ms");
+        }).start();
 
         // cargar idioma
         String idioma = getSharedPreferences("Ajustes", MODE_PRIVATE).getString("Idioma", "es");

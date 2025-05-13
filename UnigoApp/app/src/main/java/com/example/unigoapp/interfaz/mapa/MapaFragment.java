@@ -53,6 +53,9 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.io.File;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class MapaFragment extends Fragment implements MainActivity.UpdatableFragment {
 
@@ -68,6 +71,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
     private Polyline rutaActual;
     private ProgressDialog progressDialog;
     private FloatingActionButton fabOpciones;
+    private ScheduledExecutorService scheduler;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -88,28 +92,31 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         ImageButton btnCenter = root.findViewById(R.id.btn_center);
         btnCenter.setOnClickListener(v -> centrarMapaEnGasteiz());
 
-        // Initialize graphs using GrafosSingleton
+
         progressDialog = new ProgressDialog(requireContext());
-        progressDialog.setMessage("Cargando grafos...");
+        progressDialog.setMessage(getString(R.string.cargando_grafos));
         progressDialog.setCancelable(false);
         progressDialog.show();
 
         new Thread(() -> {
             long startTime = System.currentTimeMillis();
+            scheduler = Executors.newSingleThreadScheduledExecutor();
+            scheduler.scheduleWithFixedDelay(() -> {
 
-            // Get graphs from singleton
-            grafoBuses = GrafosSingleton.getGrafoBuses(requireContext());
-            grafoCarrilesBici = GrafosSingleton.getGrafoBici(requireContext());
-            grafoAndar = GrafosSingleton.getGrafoAndar(requireContext());
+                int procesoAndar = GrafosSingleton.getProcesoAndar();
+                if (procesoAndar == 2) {
+                    requireActivity().runOnUiThread(() -> {
+                        if (progressDialog != null && progressDialog.isShowing()) {
+                            progressDialog.dismiss();
+                        }
+                    });
 
-            long endTime = System.currentTimeMillis();
-            System.out.println("TiempoEjecucion: Grafos cargados en " + (endTime - startTime) + " ms");
-
-            requireActivity().runOnUiThread(() -> {
-                if (progressDialog != null && progressDialog.isShowing()) {
-                    progressDialog.dismiss();
+                    long endTime = System.currentTimeMillis();
+                    System.out.println("TiempoEjecucion: Grafos cargados en " + (endTime - startTime) + " ms");
+                    scheduler.shutdown();
                 }
-            });
+                // empieza a los 10 segundos, cada segundo comprueba
+            }, 10, 1, TimeUnit.SECONDS);
         }).start();
 
         mvMapa.setOnTouchListener((v, event) -> false); // necesario para que reciba los clicks
@@ -141,9 +148,9 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
                 Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
                 new AlertDialog.Builder(requireContext())
-                        .setTitle("Permiso de ubicación")
-                        .setMessage("Necesitamos acceso a tu ubicación para mostrarte rutas precisas")
-                        .setPositiveButton("Entendido", (dialog, which) ->
+                        .setTitle(R.string.permiso_ubi)
+                        .setMessage(R.string.acceso_ubi)
+                        .setPositiveButton(R.string.entendido, (dialog, which) ->
                                 requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                                         PERMISO_UBICACION))
                         .show();
@@ -169,16 +176,14 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
     private void configurarMapa() {
         System.out.println("MapaFrag: configurarMapa");
 
-        // Configure cache path and size
+        // cache y paths
         File basePath = new File(requireContext().getCacheDir().getAbsolutePath(), "osmdroid");
         Configuration.getInstance().setOsmdroidBasePath(basePath);
         File tileCache = new File(basePath, "tiles");
         Configuration.getInstance().setOsmdroidTileCache(tileCache);
-
-        // Set user agent to comply with OSM policy
         Configuration.getInstance().setUserAgentValue(requireContext().getPackageName());
 
-        // Set tile download limits
+        // limites de tiles
         Configuration.getInstance().setCacheMapTileCount((short)12);
         Configuration.getInstance().setCacheMapTileOvershoot((short)12);
         Configuration.getInstance().setTileDownloadThreads((short)4);
@@ -186,7 +191,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
 
         mvMapa.setTileSource(TileSourceFactory.MAPNIK);
 
-        // Check if app is in offline mode
+        // mirar si la app esta offline, y si no, usar lo cargado
         boolean isOffline = ((MainActivity) requireActivity()).estaOffline();
         mvMapa.setUseDataConnection(!isOffline);
 
@@ -265,7 +270,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         boolean isOffline = ((MainActivity) requireActivity()).estaOffline();
         mvMapa.setUseDataConnection(!isOffline);
         if (isOffline) {
-            ToastPersonalizado.showToast(requireContext(), "Mapa en modo sin conexión");
+            ToastPersonalizado.showToast(requireContext(), getString(R.string.mapa_sin_conexion));
         }
     }
 
@@ -505,8 +510,9 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
     private void calcularRutaOpcion(String tipo) {
         // comprobar si el grafo esta ya cargado
         if (tipo.equals("andar")) {
+            // comprobar si el grafo esta ya cargado
             progressDialog = new ProgressDialog(requireContext());
-            progressDialog.setMessage("Calculando ruta andando...");
+            progressDialog.setMessage(getString(R.string.calc_andando));
             progressDialog.setCancelable(false);
             progressDialog.show();
 
@@ -521,7 +527,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         else if (tipo.equals("bici")) {
 
             progressDialog = new ProgressDialog(requireContext());
-            progressDialog.setMessage("Calculando ruta en bici...");
+            progressDialog.setMessage(getString(R.string.calc_bici));
             progressDialog.setCancelable(false);
             progressDialog.show();
 
@@ -536,7 +542,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         else if (tipo.equals("bus")) {
 
             progressDialog = new ProgressDialog(requireContext());
-            progressDialog.setMessage("Calculando ruta en bus...");
+            progressDialog.setMessage(getString(R.string.calc_bus));
             progressDialog.setCancelable(false);
             progressDialog.show();
 

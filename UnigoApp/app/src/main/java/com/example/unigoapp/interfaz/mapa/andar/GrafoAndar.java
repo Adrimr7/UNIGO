@@ -1,6 +1,8 @@
 package com.example.unigoapp.interfaz.mapa.andar;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 
@@ -13,9 +15,11 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.osmdroid.util.GeoPoint;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
+import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -23,6 +27,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class GrafoAndar {
     private Graph<GeoPoint, DefaultWeightedEdge> grafo;
@@ -55,26 +61,49 @@ public class GrafoAndar {
         }
     }
 
+    private void logMemoria(String tag) {
+        Runtime runtime = Runtime.getRuntime();
+
+        long maxMemory = runtime.maxMemory();        // Máxima memoria que puede usar la app
+        long totalMemory = runtime.totalMemory();    // Memoria actualmente asignada
+        long freeMemory = runtime.freeMemory();      // Memoria libre dentro de la asignada
+        long usedMemory = totalMemory - freeMemory;  // Memoria usada real
+
+        Log.d(tag, String.format("Max: %.2f MB, Total: %.2f MB, Usada: %.2f MB, Libre: %.2f MB",
+                maxMemory / (1024.0 * 1024.0),
+                totalMemory / (1024.0 * 1024.0),
+                usedMemory / (1024.0 * 1024.0),
+                freeMemory / (1024.0 * 1024.0)));
+    }
+
+
     private void construirGrafoEficiente() {
 
-        long startTime = System.currentTimeMillis();
+        ExecutorService executor = Executors.newSingleThreadExecutor();
 
-        try (InputStream is = context.getAssets().open("grafo.bin");
-             ObjectInputStream ois = new ObjectInputStream(is)) {
-            Graph<GeoPoint, DefaultWeightedEdge> grafoCargado = (Graph<GeoPoint, DefaultWeightedEdge>) ois.readObject();
-            Map<String, GeoPoint> nodosMapCargado = (Map<String, GeoPoint>) ois.readObject();
-            this.grafo = grafoCargado;
-            this.nodosMap = nodosMapCargado;
-            System.out.println("CargaGrafo" + "Grafo cargado desde assets correctamente");
-            Log.d("TiempoGrafo", "Grafo cargado en: " +
-                    (System.currentTimeMillis() - startTime) + " ms");
-            Log.d("Estadisticas", "Nodos: " + grafo.vertexSet().size() +
-                    ", Aristas: " + grafo.edgeSet().size());
+        executor.execute(() -> {
+            long startTime = System.nanoTime();
 
+            try (InputStream is = context.getAssets().open("grafo.bin");
+                 ObjectInputStream ois = new ObjectInputStream(is)) {
 
-        } catch (IOException | ClassNotFoundException e) {
-            System.out.println("CargaGrafo " + "Error al cargar grafo desde assets " + e);
-        }
+                Graph<GeoPoint, DefaultWeightedEdge> grafoCargado = (Graph<GeoPoint, DefaultWeightedEdge>) ois.readObject();
+                Map<String, GeoPoint> nodosMapCargado = (Map<String, GeoPoint>) ois.readObject();
+                long durationMs = (System.nanoTime() - startTime) / 1_000_000;
+
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    this.grafo = grafoCargado;
+                    this.nodosMap = nodosMapCargado;
+
+                    Log.d("TiempoGrafo", "Grafo cargado en: " + durationMs + " ms");
+                    Log.d("Estadisticas", "Nodos: " + grafo.vertexSet().size() +
+                            ", Aristas: " + grafo.edgeSet().size());
+                });
+
+            } catch (IOException | ClassNotFoundException e) {
+                Log.e("CargaGrafo", "Error al cargar grafo desde assets", e);
+            }
+        });
 
         /*
         try (InputStream is = context.getAssets().open("mapa_andar_finish.geojson")) {
