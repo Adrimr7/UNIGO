@@ -43,24 +43,24 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // hilo andar
+        long tiempoInicio = System.currentTimeMillis();
+        new Thread(() -> {
+            GrafosSingleton.getGrafoAndar(this);
+            long endTime = System.currentTimeMillis();
+            System.out.println("TiempoEjecucion: Grafo ANDAR cargados en " + (endTime - tiempoInicio) + " ms");
+        }).start();
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         comprobarConexionInternet();
         empezarComprobacionesConexion();
 
-        long tiempoInicio = System.currentTimeMillis();
-        // hilo andar
-        new Thread(() -> {
-            GrafosSingleton.getGrafoAndar(this);
-            long endTime = System.currentTimeMillis();
-            System.out.println("TiempoEjecucion: Grafo ANDAR cargados en " + (endTime - tiempoInicio) + " ms");
-        }).start();
         // hilo buses y bici
         new Thread(() -> {
             GrafosSingleton.getGrafoTranvia(this);
             long endTime3 = System.currentTimeMillis();
-            System.out.println("TiempoEjecucion: Grafo BUSES en " + (endTime3 - tiempoInicio) + " ms");
+            System.out.println("TiempoEjecucion: Grafo TRANVIA en " + (endTime3 - tiempoInicio) + " ms");
             GrafosSingleton.getGrafoBuses(this);
             long endTime = System.currentTimeMillis();
             System.out.println("TiempoEjecucion: Grafo BUSES en " + (endTime - endTime3) + " ms");
@@ -130,41 +130,7 @@ public class MainActivity extends AppCompatActivity {
         ));
 
         toolbar.addView(btnIdioma);
-        btnIdioma.setOnClickListener(v -> mostrarPopupIdioma());
         actualizarBotonIdioma(idioma);
-    }
-
-    private void mostrarPopupIdioma() {
-        // no hace nada
-        /*
-        PopupMenu popup = new PopupMenu(this, btnIdioma);
-        popup.getMenuInflater().inflate(R.menu.idioma_menu, popup.getMenu());
-
-        // mostrar iconos
-        try {
-            Field mFieldPopup = popup.getClass().getDeclaredField("mPopup");
-            mFieldPopup.setAccessible(true);
-            Object mPopup = mFieldPopup.get(popup);
-            mPopup.getClass().getDeclaredMethod("setForceShowIcon", boolean.class)
-                    .invoke(mPopup, true);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        popup.setOnMenuItemClickListener(item -> {
-            String lang = "es";
-            if (item.getItemId() == R.id.idioma_eu) {
-                lang = "eu";
-            } else if (item.getItemId() == R.id.idioma_en) {
-                lang = "en";
-            }
-            setLocale(lang, true);
-            return true;
-        });
-
-        popup.show();
-
-         */
     }
 
     private void actualizarBotonIdioma(String codigoIdioma) {
@@ -261,18 +227,8 @@ public class MainActivity extends AppCompatActivity {
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayShowTitleEnabled(false);
-            NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
-            int currentDest = navController.getCurrentDestination().getId();
-
-            if (currentDest == R.id.navigation_home) {
-                //getSupportActionBar().setTitle(R.string.titulo_home);
-            }
-            else if (currentDest == R.id.navigation_mapa) {
-                //getSupportActionBar().setTitle(R.string.titulo_mapa);
-            }
-            else {
-                //getSupportActionBar().setTitle(R.string.titulo_perfil);
-            }
+            // no hacemos nada mas porque ya no se usa el titulo
+            // ahora esta el logo
         }
     }
 
@@ -285,17 +241,14 @@ public class MainActivity extends AppCompatActivity {
         }
         else if (estaOffline && !isConnected) {
             System.out.println("INTERNET: Sigue sin haber conexion.");
-            //Toast.makeText(this, "No hay conexión a Internet. \nLa app sigue funcionando sin conexión.", Toast.LENGTH_LONG).show();
         }
         else if (!isConnected) {
             estaOffline = true;
             ToastPersonalizado.showToast(this,"Se ha perdido la conexión a Internet.");
-            //Toast.makeText(this, "Se ha perdido la conexión a Internet.", Toast.LENGTH_LONG).show();
-        } 
+        }
         else {
             estaOffline = false;
             ToastPersonalizado.showToast(this, "Se ha recuperado la conexión a Internet.");
-            //Toast.makeText(this, "Se ha recuperado la conexión a Internet.", Toast.LENGTH_LONG).show();
         }
     }
 

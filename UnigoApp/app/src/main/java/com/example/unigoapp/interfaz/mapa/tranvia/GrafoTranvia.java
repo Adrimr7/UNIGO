@@ -124,31 +124,6 @@ public class GrafoTranvia {
         return punto;
     }
 
-    public List<GeoPoint> calcularRuta(GeoPoint origen, GeoPoint destino) {
-        long startTime = System.currentTimeMillis();
-
-        GeoPoint inicio = encontrarNodoCercano(origen);
-        GeoPoint fin = encontrarNodoCercano(destino);
-
-        if (inicio == null || fin == null || inicio.equals(fin)) {
-            return Collections.emptyList();
-        }
-
-        try {
-            DijkstraShortestPath<GeoPoint, DefaultWeightedEdge> dijkstra =
-                    new DijkstraShortestPath<>(grafo);
-            GraphPath<GeoPoint, DefaultWeightedEdge> path = dijkstra.getPath(inicio, fin);
-
-            Log.d("TiempoRuta", "Ruta calculada en: " +
-                    (System.currentTimeMillis() - startTime) + " ms");
-
-            return path != null ? path.getVertexList() : Collections.emptyList();
-        } catch (Exception e) {
-            Log.e("RutaError", "Error calculando ruta", e);
-            return Collections.emptyList();
-        }
-    }
-
     private GeoPoint encontrarNodoCercano(GeoPoint punto) {
         GeoPoint masCercano = null;
         double distanciaMinima = Double.MAX_VALUE;
@@ -165,5 +140,37 @@ public class GrafoTranvia {
         }
 
         return masCercano;
+    }
+
+    public List<GeoPoint> calcularRuta(GeoPoint origen, GeoPoint destino) {
+        long startTime = System.currentTimeMillis();
+
+
+        GeoPoint origenMasCercano = encontrarNodoCercano(origen);
+        GeoPoint destinoMasCercano = encontrarNodoCercano(destino);
+
+        if (origenMasCercano == null || destinoMasCercano == null || origenMasCercano.equals(destinoMasCercano)) {
+            return Collections.emptyList();
+        }
+
+        // encontrar los paths
+        try {
+            DijkstraShortestPath<GeoPoint, DefaultWeightedEdge> dijkstra = new DijkstraShortestPath<>(grafo);
+            GraphPath<GeoPoint, DefaultWeightedEdge> rutaPropuesta = dijkstra.getPath(origenMasCercano, destinoMasCercano);
+            
+            if (rutaPropuesta == null) {
+                return Collections.emptyList();
+            }
+            
+            List<GeoPoint> rutaFinal = new ArrayList<>(rutaPropuesta.getVertexList());
+
+            Log.d("TiempoRuta", "Ruta calculada en: " + (System.currentTimeMillis() - startTime) + " ms");
+            Log.d("Info", "Distancia desde origen al nodo más cercano: " + origen.distanceToAsDouble(origenMasCercano));
+
+            return rutaFinal;
+        } catch (Exception e) {
+            Log.e("RutaError", "Error calculando ruta", e);
+            return Collections.emptyList();
+        }
     }
 }

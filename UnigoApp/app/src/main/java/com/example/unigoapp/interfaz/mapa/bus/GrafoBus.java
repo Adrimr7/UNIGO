@@ -3,6 +3,8 @@ package com.example.unigoapp.interfaz.mapa.bus;
 import android.content.Context;
 import android.util.Log;
 
+import com.example.unigoapp.interfaz.mapa.RutaInfo;
+
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
@@ -11,6 +13,7 @@ import org.jgrapht.graph.SimpleWeightedGraph;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.osmdroid.util.GeoPoint;
+
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -22,13 +25,35 @@ import java.util.Map;
 public class GrafoBus {
     private final Graph<GeoPoint, DefaultWeightedEdge> grafo;
     private final Map<String, GeoPoint> nodosMap;
+    private final Map<String, GeoPoint> estacionesMap;
+    private final Map<String, EstacionProperties> estacionesProperties;
     private final Context context;
     private static final double DISTANCIA_MINIMA_NODOS = 20.0; // 20 metros
+
+    private static class EstacionProperties {
+        private final String nombre;
+        private final int stopId;
+
+        EstacionProperties(String nombre, int stopId) {
+            this.nombre = nombre;
+            this.stopId = stopId;
+        }
+
+        public String getNombre() {
+            return nombre;
+        }
+
+        public int getStopId() {
+            return stopId;
+        }
+    }
 
     public GrafoBus(Context context) {
         this.context = context;
         this.grafo = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
         this.nodosMap = new HashMap<>();
+        this.estacionesMap = new HashMap<>();
+        this.estacionesProperties = new HashMap<>();
         construirGrafoEficiente();
     }
 
@@ -62,22 +87,39 @@ public class GrafoBus {
         if (feature.isNull("geometry")) return;
 
         JSONObject geometry = feature.getJSONObject("geometry");
-        if (!"LineString".equals(geometry.getString("type"))) return;
+        JSONObject properties = feature.getJSONObject("properties");
 
-        JSONArray coords = geometry.getJSONArray("coordinates");
-        List<GeoPoint> puntosLinea = new ArrayList<>();
+        // procesar estaciones de bus
+        if ("Point".equals(geometry.getString("type")) &&
+            properties.has("stop_id") && properties.has("stop_name")) {
+            JSONArray coordArray = geometry.getJSONArray("coordinates");
+            GeoPoint estacion = new GeoPoint(coordArray.getDouble(1), coordArray.getDouble(0));
+            int stopId = properties.getInt("stop_id");
+            String stopIdStr = String.valueOf(stopId);
+            String nombre = properties.getString("stop_name");
 
-        for (int j = 0; j < coords.length(); j++) {
-            JSONArray punto = coords.getJSONArray(j);
-            puntosLinea.add(new GeoPoint(punto.getDouble(1), punto.getDouble(0)));
+            estacionesMap.put(stopIdStr, estacion);
+            estacionesProperties.put(stopIdStr, new EstacionProperties(nombre, stopId));
+            nodosMap.put(String.format("%.6f,%.6f", estacion.getLatitude(), estacion.getLongitude()), estacion);
+            grafo.addVertex(estacion);
+            return;
         }
 
-        if (puntosLinea.size() < 2) return;
+        // procesar segmentos de rutas
+        if ("LineString".equals(geometry.getString("type"))) {
+            JSONArray coords = geometry.getJSONArray("coordinates");
+            List<GeoPoint> puntosLinea = new ArrayList<>();
 
-        // simplificar puntos y conectar nodos
-        List<GeoPoint> puntosSimplificados = simplificarLinea(puntosLinea);
+            for (int j = 0; j < coords.length(); j++) {
+                JSONArray punto = coords.getJSONArray(j);
+                puntosLinea.add(new GeoPoint(punto.getDouble(1), punto.getDouble(0)));
+            }
 
-        conectarNodosEnLinea(puntosSimplificados);
+            if (puntosLinea.size() < 2) return;
+
+            List<GeoPoint> puntosSimplificados = simplificarLinea(puntosLinea);
+            conectarNodosEnLinea(puntosSimplificados);
+        }
     }
 
     private List<GeoPoint> simplificarLinea(List<GeoPoint> puntos) {
@@ -124,31 +166,6 @@ public class GrafoBus {
         return punto;
     }
 
-    public List<GeoPoint> calcularRuta(GeoPoint origen, GeoPoint destino) {
-        long startTime = System.currentTimeMillis();
-
-        GeoPoint inicio = encontrarNodoCercano(origen);
-        GeoPoint fin = encontrarNodoCercano(destino);
-
-        if (inicio == null || fin == null || inicio.equals(fin)) {
-            return Collections.emptyList();
-        }
-
-        try {
-            DijkstraShortestPath<GeoPoint, DefaultWeightedEdge> dijkstra =
-                    new DijkstraShortestPath<>(grafo);
-            GraphPath<GeoPoint, DefaultWeightedEdge> path = dijkstra.getPath(inicio, fin);
-
-            Log.d("TiempoRuta", "Ruta calculada en: " +
-                    (System.currentTimeMillis() - startTime) + " ms");
-
-            return path != null ? path.getVertexList() : Collections.emptyList();
-        } catch (Exception e) {
-            Log.e("RutaError", "Error calculando ruta", e);
-            return Collections.emptyList();
-        }
-    }
-
     private GeoPoint encontrarNodoCercano(GeoPoint punto) {
         GeoPoint masCercano = null;
         double distanciaMinima = Double.MAX_VALUE;
@@ -165,5 +182,76 @@ public class GrafoBus {
         }
 
         return masCercano;
+    }
+
+    private GeoPoint encontrarEstacionCercana(GeoPoint punto) {
+        GeoPoint masCercana = null;
+        double distanciaMinima = Double.MAX_VALUE;
+
+        for (GeoPoint estacion : estacionesMap.values()) {
+            double distancia = punto.distanceToAsDouble(estacion);
+            if (distancia < distanciaMinima) {
+                distanciaMinima = distancia;
+                masCercana = estacion;
+            }
+        }
+
+        return masCercana;
+    }
+    public RutaInfo calcularRuta(GeoPoint origen, GeoPoint destino) {
+        long startTime = System.currentTimeMillis();
+
+        // estaciones cercanas
+        GeoPoint estacionInicio = encontrarEstacionCercana(origen);
+        GeoPoint estacionFin = encontrarEstacionCercana(destino);
+
+        if (estacionInicio == null || estacionFin == null || estacionInicio.equals(estacionFin)) {
+            return (RutaInfo) Collections.emptyList();
+        }
+
+        // info sobre estaciones
+        Log.d("RutaBus", String.format("Estación origen: %s - Lat: %.6f, Lon: %.6f",
+            obtenerNombreEstacion(estacionInicio),
+            estacionInicio.getLatitude(),
+            estacionInicio.getLongitude()));
+        Log.d("RutaBus", String.format("Estación destino: %s - Lat: %.6f, Lon: %.6f",
+            obtenerNombreEstacion(estacionFin),
+            estacionFin.getLatitude(),
+            estacionFin.getLongitude()));
+
+        try {
+            DijkstraShortestPath<GeoPoint, DefaultWeightedEdge> dijkstra =
+                new DijkstraShortestPath<>(grafo);
+            GraphPath<GeoPoint, DefaultWeightedEdge> path = dijkstra.getPath(estacionInicio, estacionFin);
+
+            if (path == null) {
+                return (RutaInfo) Collections.emptyList();
+            }
+
+            List<GeoPoint> rutaFinal = new ArrayList<>(path.getVertexList());
+
+            Log.d("TiempoRuta", "Ruta calculada en: " + (System.currentTimeMillis() - startTime) + " ms");
+            Log.d("Info", "Distancia desde origen a estación más cercana: " +
+                  origen.distanceToAsDouble(estacionInicio));            String nombreOrigen = obtenerNombreEstacion(estacionInicio);
+            String nombreDestino = obtenerNombreEstacion(estacionFin);
+
+            return new RutaInfo(rutaFinal, nombreOrigen, nombreDestino, estacionInicio, estacionFin);
+        } catch (Exception e) {
+            Log.e("RutaError", "Error calculando ruta", e);
+            return null;
+        }
+    }
+
+    private String obtenerNombreEstacion(GeoPoint estacion) {
+        for (Map.Entry<String, GeoPoint> entry : estacionesMap.entrySet()) {
+            if (entry.getValue().equals(estacion)) {
+                EstacionProperties props = estacionesProperties.get(entry.getKey());
+                if (props != null) {
+                    return props.getNombre();
+                }
+                break;
+            }
+        }
+        return "Estación desconocida";
     }
 }

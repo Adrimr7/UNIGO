@@ -1,7 +1,9 @@
 package com.example.unigoapp.utils;
 
 import android.content.Context;
+import android.util.Log;
 
+import com.example.unigoapp.interfaz.mapa.RutaInfo;
 import com.example.unigoapp.interfaz.mapa.andar.GrafoAndar;
 import com.example.unigoapp.interfaz.mapa.bici.GrafoCarrilesBiciOptimizado;
 import com.example.unigoapp.interfaz.mapa.bus.GrafoBus;
@@ -9,6 +11,7 @@ import com.example.unigoapp.interfaz.mapa.tranvia.GrafoTranvia;
 
 import org.osmdroid.util.GeoPoint;
 
+import java.util.Collections;
 import java.util.List;
 
 public class GrafosSingleton {
@@ -99,9 +102,20 @@ public class GrafosSingleton {
     public static synchronized List<GeoPoint> calcRutaBici(GeoPoint origen, GeoPoint destino) {
         return grafoCarrilesBici.calcularRuta(origen, destino);
     }
-
-    public static synchronized List<GeoPoint> calcRutaBus(GeoPoint origen, GeoPoint destino) {
-        return grafoBuses.calcularRuta(origen, destino);
+    public static synchronized RutaInfo calcRutaBus(GeoPoint origen, GeoPoint destino) {
+        RutaInfo rutaInfo = grafoBuses.calcularRuta(origen, destino);
+        if (rutaInfo != null) {
+            Log.d("RutaBus", String.format("Estación origen: %s - Lat: %.6f, Lon: %.6f",
+                rutaInfo.getNombreOrigen(),
+                rutaInfo.getEstacionOrigen().getLatitude(),
+                rutaInfo.getEstacionOrigen().getLongitude()));
+            Log.d("RutaBus", String.format("Estación destino: %s - Lat: %.6f, Lon: %.6f", 
+                rutaInfo.getNombreDestino(),
+                rutaInfo.getEstacionDestino().getLatitude(),
+                rutaInfo.getEstacionDestino().getLongitude()));
+            return rutaInfo;
+        }
+        return (RutaInfo) Collections.emptyList();
     }
 
     public static synchronized List<GeoPoint> calcRutaTranvia(GeoPoint origen, GeoPoint destino) {

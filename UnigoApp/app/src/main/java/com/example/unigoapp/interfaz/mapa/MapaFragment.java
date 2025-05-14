@@ -5,15 +5,24 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ContextThemeWrapper;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 import java.lang.reflect.Field;
@@ -58,9 +67,11 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
     private TextView tvMapa;
     private MapView mvMapa;
     private static final GeoPoint PUNTO_UNIVERSIDAD = new GeoPoint(42.839536, -2.670918);
-    private static final GeoPoint CENTRO_GASTEIZ = new GeoPoint(42.846718, -2.671635);
+    private static final GeoPoint CENTRO_GASTEIZ = new GeoPoint(42.846172, -2.673754);
     private static final int PERMISO_UBICACION = 0;
     private Polyline rutaActual;
+    private Marker markerDestino;
+    private Marker markerOrigen;
     private ProgressDialog progressDialog;
     private FloatingActionButton fabOpciones;
     private ScheduledExecutorService scheduler;
@@ -83,8 +94,8 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
 
         ImageButton btnCenter = root.findViewById(R.id.btn_center);
         btnCenter.setOnClickListener(v -> centrarMapaEnGasteiz());
-
-        if (GrafosSingleton.getProcesoAndar() == 1)
+        System.out.println("ProcesoANDAR es: " + GrafosSingleton.getProcesoAndar());
+        if (GrafosSingleton.getProcesoAndar() != 2)
         {
             progressDialog = new ProgressDialog(requireContext());
             progressDialog.setMessage(getString(R.string.cargando_grafos));
@@ -113,7 +124,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
             }).start();
         }
         else {
-            ToastPersonalizado.showToast(getContext(), "");
+            //ToastPersonalizado.showToast(getContext(), "");
         }
 
         mvMapa.setOnTouchListener((v, event) -> false); // necesario para que reciba los clicks
@@ -205,13 +216,21 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
                 new BoundingBox(43.1, -2.4, 42.7, -2.8)
         );
         mvMapa.setMinZoomLevel(10.9);
+
+        Marker marker = crearMarkerConTexto(requireContext(), mvMapa, CENTRO_GASTEIZ, "Vitoria-Gasteiz", R.drawable.ic_mi_ubicacion);
+        mvMapa.getOverlays().add(marker);
+        mvMapa.invalidate();
+
+        /*
         Marker marker = new Marker(mvMapa);
         marker.setPosition(CENTRO_GASTEIZ);
         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+        Drawable iconoModerno = ContextCompat.getDrawable(requireContext(), R.drawable.ic_mi_ubicacion);
+        marker.setIcon(iconoModerno);
         marker.setTitle("Vitoria-Gasteiz");
         mvMapa.getOverlays().add(marker);
         centrarMapaEnGasteiz();
-
+        */
         // esto es solo para que se vea en el mapa.
         // hay que hacerlo cuando el usuario lo especifique
         /*
@@ -244,6 +263,45 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         */
 
     }
+
+    private Marker crearMarkerConTexto(Context context, MapView mapView, GeoPoint posicion, String textoLabel, int iconoResId) {
+
+        LinearLayout layout = new LinearLayout(context);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setGravity(Gravity.CENTER_HORIZONTAL);
+
+        // crear el texto bonito
+        TextView texto = new TextView(context);
+        texto.setText(textoLabel);
+        texto.setTextColor(Color.BLACK);
+        texto.setTextSize(14);
+        texto.setTypeface(Typeface.DEFAULT_BOLD);
+        texto.setPadding(16, 8, 16, 8);
+        texto.setBackground(ContextCompat.getDrawable(context, R.drawable.texto_marker_background));
+        texto.setShadowLayer(4, 2, 2, Color.LTGRAY); // sombras
+        ImageView icono = new ImageView(context);
+        icono.setImageDrawable(ContextCompat.getDrawable(context, iconoResId));
+
+        layout.addView(texto);
+        layout.addView(icono);
+
+        // medir y dibujar en el bitmap
+        layout.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+        layout.layout(0, 0, layout.getMeasuredWidth(), layout.getMeasuredHeight());
+        Bitmap bitmap = Bitmap.createBitmap(layout.getMeasuredWidth(), layout.getMeasuredHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        layout.draw(canvas);
+
+        Drawable drawableFinal = new BitmapDrawable(context.getResources(), bitmap);
+
+        Marker marker = new Marker(mapView);
+        marker.setPosition(posicion);
+        marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+        marker.setIcon(drawableFinal);
+
+        return marker;
+    }
+
 
     private void centrarMapaEnGasteiz() {
         mvMapa.getController().animateTo(CENTRO_GASTEIZ);
@@ -311,12 +369,17 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
 
     private void calcularYMostrarRutaBus(GeoPoint destino) {
 
-        List<GeoPoint> ruta = GrafosSingleton.calcRutaBus(destino, PUNTO_UNIVERSIDAD);
+        RutaInfo rutaInfo = GrafosSingleton.calcRutaBus(destino, PUNTO_UNIVERSIDAD);
+        List<GeoPoint> ruta = rutaInfo.getPuntos();
 
         if (ruta == null || ruta.isEmpty()) return;
 
         if (rutaActual != null) {
             mvMapa.getOverlays().remove(rutaActual);
+        }
+        if (markerOrigen != null) {
+            mvMapa.getOverlays().remove(markerOrigen);
+            mvMapa.getOverlays().remove(markerDestino);
         }
 
         rutaActual = new Polyline();
@@ -325,6 +388,25 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         rutaActual.setWidth(11f);
 
         mvMapa.getOverlays().add(rutaActual);
+
+        markerOrigen = crearMarkerConTexto(
+                requireContext(),
+                mvMapa,
+                rutaInfo.getEstacionOrigen(),
+                "Origen: " + rutaInfo.getNombreOrigen(),
+                R.drawable.ic_bus
+        );
+        mvMapa.getOverlays().add(markerOrigen);
+
+        markerDestino = crearMarkerConTexto(
+                requireContext(),
+                mvMapa,
+                rutaInfo.getEstacionDestino(),
+                "Destino: " + rutaInfo.getNombreDestino(),
+                R.drawable.ic_bus
+        );
+        mvMapa.getOverlays().add(markerDestino);
+
         mvMapa.invalidate();
     }
 
