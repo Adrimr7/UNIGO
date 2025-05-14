@@ -1,12 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/opcion_caminar"
-        android:title="@string/caminar"/>
+        android:icon="@drawable/ic_walk"
+        android:title="@string/caminar"
+        app:iconTint="@color/primary"/>
     <item
         android:id="@+id/opcion_bici"
-        android:title="@string/en_bici"/>
+        android:icon="@drawable/ic_bike"
+        android:title="@string/en_bici"
+        app:iconTint="@color/primary"/>
     <item
         android:id="@+id/opcion_bus"
-        android:title="@string/en_bus"/>
+        android:icon="@drawable/ic_bus"
+        android:title="@string/en_bus"
+        app:iconTint="@color/primary"/>
+    <item
+        android:id="@+id/opcion_tranvia"
+        android:icon="@drawable/ic_tram"
+        android:title="@string/tranvia"
+        app:iconTint="@color/primary"/>
 </menu>

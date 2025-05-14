@@ -10,8 +10,10 @@
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/languageCard"
         style="@style/Widget.App.CardView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_width="372dp"
+        android:layout_height="348dp"
+        android:backgroundTint="@color/background"
+        app:cardElevation="6dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -23,43 +25,75 @@
             android:orientation="vertical">
 
             <TextView
-                android:layout_width="wrap_content"
+                android:id="@+id/tvIdioma"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="20dp"
                 android:text="@string/cambiar_idioma"
-                android:textAppearance="@style/TextAppearance.App.Headline2" />
+                android:textAlignment="center"
+                android:textAllCaps="false"
+                android:textAppearance="@style/TextAppearance.AppCompat.Display1"
+                android:textColor="@color/purple_200"
+                android:textStyle="bold" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnCastellano"
                 style="@style/Widget.App.Button"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="72dp"
                 android:layout_marginBottom="8dp"
-                app:iconGravity="textStart"
-                app:iconTint="@null"
+                android:gravity="center_horizontal|center_vertical"
+                android:insetLeft="10dp"
+                android:insetRight="10dp"
                 android:text="Castellano"
-                app:icon="@drawable/ic_flag_es" />
+                android:textAppearance="@style/TextAppearance.App.Body1"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:backgroundTint="@color/secondary_dark"
+                app:cornerRadius="24dp"
+                app:icon="@drawable/ic_flag_es"
+                app:iconGravity="textStart"
+                app:iconPadding="12dp"
+                app:iconSize="30dp"
+                app:iconTint="@null" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnEuskera"
                 style="@style/Widget.App.Button"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="72dp"
                 android:layout_marginBottom="8dp"
-                app:iconGravity="textStart"
-                app:iconTint="@null"
+                android:insetLeft="10dp"
+                android:insetRight="10dp"
                 android:text="Euskara    "
-                app:icon="@drawable/ic_flag_eu" />
+                android:textAppearance="@style/TextAppearance.App.Body1"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:backgroundTint="@color/secondary_dark"
+                app:cornerRadius="24dp"
+                app:icon="@drawable/ic_flag_eu"
+                app:iconGravity="textStart"
+                app:iconPadding="16dp"
+                app:iconSize="30dp"
+                app:iconTint="@null" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnEnglish"
                 style="@style/Widget.App.Button"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:iconGravity="textStart"
-                app:iconTint="@null"
+                android:layout_height="72dp"
+                android:insetLeft="10dp"
+                android:insetRight="10dp"
                 android:text="English    "
-                app:icon="@drawable/ic_flag_en" />
+                android:textAppearance="@style/TextAppearance.App.Body1"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:backgroundTint="@color/secondary_dark"
+                app:cornerRadius="24dp"
+                app:icon="@drawable/ic_flag_en"
+                app:iconGravity="textStart"
+                app:iconSize="30dp"
+                app:iconTint="@null" />
 
         </LinearLayout>
 

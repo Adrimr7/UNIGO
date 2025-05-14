@@ -1,21 +1,28 @@
-package com.example.unigoapp.interfaz.mapa;
+package com.example.unigoapp.utils;
 
 import android.content.Context;
 
 import com.example.unigoapp.interfaz.mapa.andar.GrafoAndar;
 import com.example.unigoapp.interfaz.mapa.bici.GrafoCarrilesBiciOptimizado;
 import com.example.unigoapp.interfaz.mapa.bus.GrafoBus;
+import com.example.unigoapp.interfaz.mapa.tranvia.GrafoTranvia;
+
+import org.osmdroid.util.GeoPoint;
+
+import java.util.List;
 
 public class GrafosSingleton {
     private static GrafoCarrilesBiciOptimizado grafoCarrilesBici;
     private static GrafoBus grafoBuses;
     private static GrafoAndar grafoAndar;
+    private static GrafoTranvia grafoTranvia;
 
     // los procesos son para comprobar si se ha cargado o no algo concreto.
 
-    private static int procesoAndar = 0;
-    private static int procesoBici = 0;
-    private static int procesoBus = 0;
+    private static volatile int procesoAndar = 0;
+    private static volatile int procesoBici = 0;
+    private static volatile int procesoBus = 0;
+    private static volatile int procesoTranvia = 0;
 
     private GrafosSingleton() {}
 
@@ -45,6 +52,14 @@ public class GrafosSingleton {
         }
         return grafoCarrilesBici;
     }
+    public static synchronized GrafoTranvia getGrafoTranvia(Context context) {
+        if (grafoTranvia == null) {
+            procesoTranvia = 1;
+            grafoTranvia = new GrafoTranvia(context);
+            procesoTranvia = 2;
+        }
+        return grafoTranvia;
+    }
 
     public static synchronized void setGrafoAndar(GrafoAndar grafo) {
         grafoAndar = grafo;
@@ -58,6 +73,10 @@ public class GrafosSingleton {
         grafoCarrilesBici = grafo;
     }
 
+    public static synchronized void setGrafoTranvia(GrafoTranvia grafo) {
+        grafoTranvia = grafo;
+    }
+
     public static synchronized int getProcesoAndar() {
         return procesoAndar;
     }
@@ -69,6 +88,24 @@ public class GrafosSingleton {
     public static synchronized int getProcesoBus() {
         return procesoBus;
     }
+    public static synchronized int getProcesoTranvia() {
+        return procesoTranvia;
+    }
 
+    public static synchronized List<GeoPoint> calcRutaAndar(GeoPoint origen, GeoPoint destino) {
+        return grafoAndar.calcularRuta(origen, destino);
+    }
+
+    public static synchronized List<GeoPoint> calcRutaBici(GeoPoint origen, GeoPoint destino) {
+        return grafoCarrilesBici.calcularRuta(origen, destino);
+    }
+
+    public static synchronized List<GeoPoint> calcRutaBus(GeoPoint origen, GeoPoint destino) {
+        return grafoBuses.calcularRuta(origen, destino);
+    }
+
+    public static synchronized List<GeoPoint> calcRutaTranvia(GeoPoint origen, GeoPoint destino) {
+        return grafoTranvia.calcularRuta(origen, destino);
+    }
 
 }

@@ -3,6 +3,7 @@ package com.example.unigoapp.interfaz.mapa;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -11,9 +12,12 @@ import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ContextThemeWrapper;
 import android.widget.ImageButton;
 import android.widget.PopupMenu;
 import android.widget.TextView;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
@@ -24,16 +28,10 @@ import androidx.preference.PreferenceManager;
 import com.example.unigoapp.R;
 import com.example.unigoapp.MainActivity;
 import com.example.unigoapp.databinding.FragmentMapaBinding;
-import com.example.unigoapp.interfaz.mapa.andar.GrafoAndar;
-import com.example.unigoapp.interfaz.mapa.bici.GrafoCarrilesBiciOptimizado;
-import com.example.unigoapp.interfaz.mapa.bus.GrafoBus;
 import com.example.unigoapp.utils.ToastPersonalizado;
-import com.example.unigoapp.interfaz.mapa.GrafosSingleton;
+import com.example.unigoapp.utils.GrafosSingleton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
 import org.osmdroid.events.MapEventsReceiver;
@@ -48,9 +46,6 @@ import org.osmdroid.views.overlay.Polyline;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.io.File;
 import java.util.concurrent.Executors;
@@ -65,9 +60,6 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
     private static final GeoPoint PUNTO_UNIVERSIDAD = new GeoPoint(42.839536, -2.670918);
     private static final GeoPoint CENTRO_GASTEIZ = new GeoPoint(42.846718, -2.671635);
     private static final int PERMISO_UBICACION = 0;
-    private GrafoCarrilesBiciOptimizado grafoCarrilesBici;
-    private GrafoBus grafoBuses;
-    private GrafoAndar grafoAndar;
     private Polyline rutaActual;
     private ProgressDialog progressDialog;
     private FloatingActionButton fabOpciones;
@@ -92,32 +84,37 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         ImageButton btnCenter = root.findViewById(R.id.btn_center);
         btnCenter.setOnClickListener(v -> centrarMapaEnGasteiz());
 
+        if (GrafosSingleton.getProcesoAndar() == 1)
+        {
+            progressDialog = new ProgressDialog(requireContext());
+            progressDialog.setMessage(getString(R.string.cargando_grafos));
+            progressDialog.setCancelable(false);
+            progressDialog.show();
 
-        progressDialog = new ProgressDialog(requireContext());
-        progressDialog.setMessage(getString(R.string.cargando_grafos));
-        progressDialog.setCancelable(false);
-        progressDialog.show();
+            new Thread(() -> {
+                long startTime = System.currentTimeMillis();
+                scheduler = Executors.newSingleThreadScheduledExecutor();
+                scheduler.scheduleWithFixedDelay(() -> {
 
-        new Thread(() -> {
-            long startTime = System.currentTimeMillis();
-            scheduler = Executors.newSingleThreadScheduledExecutor();
-            scheduler.scheduleWithFixedDelay(() -> {
+                    int procesoAndar = GrafosSingleton.getProcesoAndar();
+                    if (procesoAndar == 2) {
+                        requireActivity().runOnUiThread(() -> {
+                            if (progressDialog != null && progressDialog.isShowing()) {
+                                progressDialog.dismiss();
+                            }
+                        });
 
-                int procesoAndar = GrafosSingleton.getProcesoAndar();
-                if (procesoAndar == 2) {
-                    requireActivity().runOnUiThread(() -> {
-                        if (progressDialog != null && progressDialog.isShowing()) {
-                            progressDialog.dismiss();
-                        }
-                    });
-
-                    long endTime = System.currentTimeMillis();
-                    System.out.println("TiempoEjecucion: Grafos cargados en " + (endTime - startTime) + " ms");
-                    scheduler.shutdown();
-                }
-                // empieza a los 10 segundos, cada segundo comprueba
-            }, 10, 1, TimeUnit.SECONDS);
-        }).start();
+                        long endTime = System.currentTimeMillis();
+                        System.out.println("TiempoEjecucion: Grafos cargados en " + (endTime - startTime) + " ms");
+                        scheduler.shutdown();
+                    }
+                    // empieza a los 10 segundos, cada segundo comprueba
+                }, 0, 1, TimeUnit.SECONDS);
+            }).start();
+        }
+        else {
+            ToastPersonalizado.showToast(getContext(), "");
+        }
 
         mvMapa.setOnTouchListener((v, event) -> false); // necesario para que reciba los clicks
         mvMapa.getOverlays().add(new MapEventsOverlay(requireContext(), new MapEventsReceiver() {
@@ -293,6 +290,64 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         }
     }
 
+    private void calcularYMostrarRutaBici(GeoPoint destino) {
+
+        List<GeoPoint> ruta = GrafosSingleton.calcRutaBici(destino, PUNTO_UNIVERSIDAD);
+
+        if (ruta == null || ruta.isEmpty()) return;
+
+        if (rutaActual != null) {
+            mvMapa.getOverlays().remove(rutaActual);
+        }
+
+        rutaActual = new Polyline();
+        rutaActual.setPoints(ruta);
+        rutaActual.setColor(ContextCompat.getColor(requireContext(), R.color.purple_500));
+        rutaActual.setWidth(11f);
+
+        mvMapa.getOverlays().add(rutaActual);
+        mvMapa.invalidate();
+    }
+
+    private void calcularYMostrarRutaBus(GeoPoint destino) {
+
+        List<GeoPoint> ruta = GrafosSingleton.calcRutaBus(destino, PUNTO_UNIVERSIDAD);
+
+        if (ruta == null || ruta.isEmpty()) return;
+
+        if (rutaActual != null) {
+            mvMapa.getOverlays().remove(rutaActual);
+        }
+
+        rutaActual = new Polyline();
+        rutaActual.setPoints(ruta);
+        rutaActual.setColor(ContextCompat.getColor(requireContext(), R.color.purple_200));
+        rutaActual.setWidth(11f);
+
+        mvMapa.getOverlays().add(rutaActual);
+        mvMapa.invalidate();
+    }
+
+    private void calcularYMostrarRutaTranvia(GeoPoint destino) {
+
+        List<GeoPoint> ruta = GrafosSingleton.calcRutaTranvia(destino, PUNTO_UNIVERSIDAD);
+
+        if (ruta == null || ruta.isEmpty()) return;
+
+        if (rutaActual != null) {
+            mvMapa.getOverlays().remove(rutaActual);
+        }
+
+        rutaActual = new Polyline();
+        rutaActual.setPoints(ruta);
+        rutaActual.setColor(ContextCompat.getColor(requireContext(), R.color.purple_200));
+        rutaActual.setWidth(11f);
+
+        mvMapa.getOverlays().add(rutaActual);
+        mvMapa.invalidate();
+    }
+
+    /*
     private void cargarCarrilesBici() {
         try {
             InputStream is = requireContext().getAssets().open("viasciclistas23.geojson");
@@ -337,138 +392,97 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         }
     }
 
-    private void calcularYMostrarRutaBici(GeoPoint destino) {
-        if (grafoCarrilesBici == null) return;
+        private void cargarBuses() {
+            try {
+                InputStream is = requireContext().getAssets().open("rutas_buses.geojson");
+                int size = is.available();
+                byte[] buffer = new byte[size];
+                is.read(buffer);
+                is.close();
+                String json = new String(buffer, StandardCharsets.UTF_8);
 
-        List<GeoPoint> ruta = grafoCarrilesBici.calcularRuta(PUNTO_UNIVERSIDAD, destino);
+                JSONObject geojson = new JSONObject(json);
+                JSONArray features = geojson.getJSONArray("features");
 
-        if (ruta == null || ruta.isEmpty()) return;
+                for (int i = 0; i < features.length(); i++) {
+                    JSONObject feature = features.getJSONObject(i);
+                    if (feature.isNull("geometry")) continue;
+                    JSONObject geometry = feature.getJSONObject("geometry");
+                    String tipo = geometry.getString("type");
 
-        if (rutaActual != null) {
-            mvMapa.getOverlays().remove(rutaActual);
-        }
+                    if (tipo.equals("LineString")) {
+                        JSONArray coords = geometry.getJSONArray("coordinates");
 
-        rutaActual = new Polyline();
-        rutaActual.setPoints(ruta);
-        rutaActual.setColor(ContextCompat.getColor(requireContext(), R.color.purple_500));
-        rutaActual.setWidth(10f);
+                        Polyline polyline = new Polyline();
+                        polyline.setColor(ContextCompat.getColor(requireContext(), R.color.purple_200));
+                        polyline.setWidth(4.0f);
 
-        mvMapa.getOverlays().add(rutaActual);
-        mvMapa.invalidate();
-    }
+                        for (int j = 0; j < coords.length(); j++) {
+                            JSONArray punto = coords.getJSONArray(j);
+                            double lon = punto.getDouble(0);
+                            double lat = punto.getDouble(1);
+                            polyline.addPoint(new GeoPoint(lat, lon));
+                        }
 
-    private void calcularYMostrarRutaBus(GeoPoint destino) {
-        if (grafoBuses == null) return;
-
-        List<GeoPoint> ruta = grafoBuses.calcularRuta(PUNTO_UNIVERSIDAD, destino);
-
-        if (ruta == null || ruta.isEmpty()) return;
-
-        if (rutaActual != null) {
-            mvMapa.getOverlays().remove(rutaActual);
-        }
-
-        rutaActual = new Polyline();
-        rutaActual.setPoints(ruta);
-        rutaActual.setColor(ContextCompat.getColor(requireContext(), R.color.purple_200));
-        rutaActual.setWidth(10f);
-
-        mvMapa.getOverlays().add(rutaActual);
-        mvMapa.invalidate();
-    }
-
-    private void cargarBuses() {
-        try {
-            InputStream is = requireContext().getAssets().open("rutas_buses.geojson");
-            int size = is.available();
-            byte[] buffer = new byte[size];
-            is.read(buffer);
-            is.close();
-            String json = new String(buffer, StandardCharsets.UTF_8);
-
-            JSONObject geojson = new JSONObject(json);
-            JSONArray features = geojson.getJSONArray("features");
-
-            for (int i = 0; i < features.length(); i++) {
-                JSONObject feature = features.getJSONObject(i);
-                if (feature.isNull("geometry")) continue;
-                JSONObject geometry = feature.getJSONObject("geometry");
-                String tipo = geometry.getString("type");
-
-                if (tipo.equals("LineString")) {
-                    JSONArray coords = geometry.getJSONArray("coordinates");
-
-                    Polyline polyline = new Polyline();
-                    polyline.setColor(ContextCompat.getColor(requireContext(), R.color.purple_200));
-                    polyline.setWidth(4.0f);
-
-                    for (int j = 0; j < coords.length(); j++) {
-                        JSONArray punto = coords.getJSONArray(j);
-                        double lon = punto.getDouble(0);
-                        double lat = punto.getDouble(1);
-                        polyline.addPoint(new GeoPoint(lat, lon));
+                        mvMapa.getOverlays().add(polyline);
                     }
-
-                    mvMapa.getOverlays().add(polyline);
                 }
+
+                mvMapa.invalidate(); // refresca el mapa
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-
-            mvMapa.invalidate(); // refresca el mapa
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
-    }
 
-    private void cargarAndar() {
-        try {
-            InputStream is = requireContext().getAssets().open("mapaandando_utf8.geojson");
-            int size = is.available();
-            byte[] buffer = new byte[size];
-            is.read(buffer);
-            is.close();
-            String json = new String(buffer, StandardCharsets.UTF_8);
+        private void cargarAndar() {
+            try {
+                InputStream is = requireContext().getAssets().open("mapaandando_utf8.geojson");
+                int size = is.available();
+                byte[] buffer = new byte[size];
+                is.read(buffer);
+                is.close();
+                String json = new String(buffer, StandardCharsets.UTF_8);
 
-            JSONObject geojson = new JSONObject(json);
-            JSONArray features = geojson.getJSONArray("features");
+                JSONObject geojson = new JSONObject(json);
+                JSONArray features = geojson.getJSONArray("features");
 
-            for (int i = 0; i < features.length(); i++) {
-                JSONObject feature = features.getJSONObject(i);
-                if (feature.isNull("geometry")) continue;
-                JSONObject geometry = feature.getJSONObject("geometry");
-                String tipo = geometry.getString("type");
+                for (int i = 0; i < features.length(); i++) {
+                    JSONObject feature = features.getJSONObject(i);
+                    if (feature.isNull("geometry")) continue;
+                    JSONObject geometry = feature.getJSONObject("geometry");
+                    String tipo = geometry.getString("type");
 
-                if (tipo.equals("LineString")) {
-                    JSONArray coords = geometry.getJSONArray("coordinates");
+                    if (tipo.equals("LineString")) {
+                        JSONArray coords = geometry.getJSONArray("coordinates");
 
-                    Polyline polyline = new Polyline();
-                    polyline.setColor(ContextCompat.getColor(requireContext(), R.color.purple_200));
-                    polyline.setWidth(4.0f);
+                        Polyline polyline = new Polyline();
+                        polyline.setColor(ContextCompat.getColor(requireContext(), R.color.purple_200));
+                        polyline.setWidth(4.0f);
 
-                    for (int j = 0; j < coords.length(); j++) {
-                        JSONArray punto = coords.getJSONArray(j);
-                        double lon = punto.getDouble(0);
-                        double lat = punto.getDouble(1);
-                        polyline.addPoint(new GeoPoint(lat, lon));
+                        for (int j = 0; j < coords.length(); j++) {
+                            JSONArray punto = coords.getJSONArray(j);
+                            double lon = punto.getDouble(0);
+                            double lat = punto.getDouble(1);
+                            polyline.addPoint(new GeoPoint(lat, lon));
+                        }
+
+                        mvMapa.getOverlays().add(polyline);
                     }
-
-                    mvMapa.getOverlays().add(polyline);
                 }
+
+                mvMapa.invalidate(); // refresca el mapa
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-
-            mvMapa.invalidate(); // refresca el mapa
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
-    }
-
+        */
     private void calcularYMostrarRutaAndando(GeoPoint destino) {
-        if (grafoAndar == null) return;
 
-        List<GeoPoint> ruta = grafoAndar.calcularRuta(PUNTO_UNIVERSIDAD, destino);
+        List<GeoPoint> ruta = GrafosSingleton.calcRutaAndar(destino, PUNTO_UNIVERSIDAD);
 
         if (ruta == null || ruta.isEmpty()) return;
 
@@ -484,10 +498,23 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         mvMapa.getOverlays().add(rutaActual);
         mvMapa.invalidate();
     }
-
     private void mostrarOpcionesRuta(View view) {
-        PopupMenu popupMenu = new PopupMenu(getContext(), view);
+        System.out.println("MFragment: mostrarOpcionesRuta");
+        Context wrapper = new ContextThemeWrapper(getContext(), R.style.Widget_App_PopupMenu);
+        PopupMenu popupMenu = new PopupMenu(wrapper, view);
         popupMenu.getMenuInflater().inflate(R.menu.opciones_ruta_menu, popupMenu.getMenu());
+        
+
+        try {
+            Field field = PopupMenu.class.getDeclaredField("mPopup");
+            field.setAccessible(true);
+            Object menuPopupHelper = field.get(popupMenu);
+            Class<?> classPopupHelper = Class.forName(menuPopupHelper.getClass().getName());
+            Method setForceShowIcon = classPopupHelper.getMethod("setForceShowIcon", boolean.class);
+            setForceShowIcon.invoke(menuPopupHelper, true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         popupMenu.show();
 
@@ -503,41 +530,52 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
                 calcularRutaOpcion("bus");
                 return true;
             }
+            else if (itemId == R.id.opcion_tranvia){
+                calcularRutaOpcion("tranvia");
+                return true;
+            }
             return false;
         });
     }
 
     private void calcularRutaOpcion(String tipo) {
-        // comprobar si el grafo esta ya cargado
+        System.out.println("MFragment: calcularRuta: " + tipo);
         if (tipo.equals("andar")) {
-            // comprobar si el grafo esta ya cargado
-            progressDialog = new ProgressDialog(requireContext());
-            progressDialog.setMessage(getString(R.string.calc_andando));
-            progressDialog.setCancelable(false);
-            progressDialog.show();
+            if (GrafosSingleton.getProcesoAndar() == 1)
+            {
+                ToastPersonalizado.showToast(requireContext(), getString(R.string.cargando_grafos));
+            }
+            else {
+                progressDialog = new ProgressDialog(requireContext());
+                progressDialog.setMessage(getString(R.string.calc_andando));
+                progressDialog.setCancelable(false);
+                progressDialog.show();
 
-            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                // TODO: cambiar ubicacion a la actual.
-                calcularYMostrarRutaAndando(CENTRO_GASTEIZ);
-                progressDialog.dismiss();
-            }, 100);
-            System.out.println("NO IMPLEMENTADO TODAVIA");
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    // TODO: cambiar ubicacion a la actual.
+                    calcularYMostrarRutaAndando(CENTRO_GASTEIZ);
+                    progressDialog.dismiss();
+                }, 100);
+            }
 
         }
         else if (tipo.equals("bici")) {
+            if (GrafosSingleton.getProcesoBici() == 1)
+            {
+                ToastPersonalizado.showToast(requireContext(), getString(R.string.cargando_grafos));
+            }
+            else {
+                progressDialog = new ProgressDialog(requireContext());
+                progressDialog.setMessage(getString(R.string.calc_bici));
+                progressDialog.setCancelable(false);
+                progressDialog.show();
 
-            progressDialog = new ProgressDialog(requireContext());
-            progressDialog.setMessage(getString(R.string.calc_bici));
-            progressDialog.setCancelable(false);
-            progressDialog.show();
-
-            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                // TODO: cambiar ubicacion a la actual.
-                calcularYMostrarRutaBici(CENTRO_GASTEIZ);
-                progressDialog.dismiss();
-            }, 100);
-
-
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    // TODO: cambiar ubicacion a la actual.
+                    calcularYMostrarRutaBici(CENTRO_GASTEIZ);
+                    progressDialog.dismiss();
+                }, 100);
+            }
         }
         else if (tipo.equals("bus")) {
 
@@ -551,7 +589,19 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
                 calcularYMostrarRutaBus(CENTRO_GASTEIZ);
                 progressDialog.dismiss();
             }, 100);
+        }
+        else if (tipo.equals("tranvia")) {
 
+            progressDialog = new ProgressDialog(requireContext());
+            progressDialog.setMessage(getString(R.string.calc_tranvia));
+            progressDialog.setCancelable(false);
+            progressDialog.show();
+
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                // TODO: cambiar ubicacion a la actual.
+                calcularYMostrarRutaTranvia(CENTRO_GASTEIZ);
+                progressDialog.dismiss();
+            }, 100);
         }
     }
 

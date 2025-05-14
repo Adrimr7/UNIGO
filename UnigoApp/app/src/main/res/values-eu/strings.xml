@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">UnigoApp</string>
+    <string name="app_name">EHUgo!</string>
     <string name="titulo_home">Hasiera</string>
     <string name="titulo_mapa">Mapa</string>
-    <string name="titulo_perfil">Nire Profila</string>
+    <string name="titulo_perfil">Hizkuntza</string>
     <string name="castellano">Gaztelania</string>
     <string name="euskera">Euskara</string>
     <string name="english">Ingelesa</string>
     <string name="texto_home">Hau hasiera fragment da</string>
     <string name="texto_mapa">Hau mapa fragment da</string>
-    <string name="texto_perfil">Hau profil fragment da</string>
+    <string name="texto_perfil">Hau hizkuntza fragment da</string>
     <string name="cambiar_idioma">Hizkuntza aldatu</string>
     <string name="opciones_ruta">Ibilbidea</string>
     <string name="caminar">Oinez</string>
@@ -23,4 +23,6 @@
     <string name="calc_andando">Oinezko ibilbidea lortzen...</string>
     <string name="calc_bici">Bizikletarentzat ibilbidea lortzen...</string>
     <string name="calc_bus">Autobusez ibilbidea lortzen...</string>
+    <string name="tranvia">Tranbia</string>
+    <string name="calc_tranvia" >Tranbiaz ibilbidea lortzen...</string>
 </resources>

@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">UnigoApp</string>
+    <string name="app_name">EHUgo!</string>
     <string name="castellano">Spanish</string>
     <string name="euskera">Basque</string>
     <string name="english">English</string>
     <string name="titulo_home">Home</string>
     <string name="titulo_mapa">Map</string>
-    <string name="titulo_perfil">My Profile</string>
+    <string name="titulo_perfil">Language</string>
     <string name="texto_home">This is the home fragment</string>
     <string name="texto_mapa">This is the map fragment</string>
-    <string name="texto_perfil">This is the profile fragment</string>
+    <string name="texto_perfil">This is the language fragment</string>
     <string name="cambiar_idioma">Change language</string>
     <string name="opciones_ruta">Route</string>
     <string name="caminar">Walking</string>
@@ -23,4 +23,6 @@
     <string name="calc_andando">Loading walking route...</string>
     <string name="calc_bici">Loading bike route...</string>
     <string name="calc_bus">Loading bus route...</string>
+    <string name="tranvia">Tram</string>
+    <string name="calc_tranvia">Loading tram route...</string>
 </resources>

@@ -6,7 +6,6 @@ import android.content.res.Resources;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -15,14 +14,12 @@ import android.view.Menu;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.PopupMenu;
 
-import com.example.unigoapp.interfaz.mapa.GrafosSingleton;
+import com.example.unigoapp.utils.GrafosSingleton;
 import com.example.unigoapp.utils.ToastPersonalizado;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.view.menu.MenuBuilder;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
@@ -32,7 +29,6 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.example.unigoapp.databinding.ActivityMainBinding;
 
-import java.lang.reflect.Field;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
@@ -60,17 +56,17 @@ public class MainActivity extends AppCompatActivity {
             long endTime = System.currentTimeMillis();
             System.out.println("TiempoEjecucion: Grafo ANDAR cargados en " + (endTime - tiempoInicio) + " ms");
         }).start();
-        // hilo buses
+        // hilo buses y bici
         new Thread(() -> {
+            GrafosSingleton.getGrafoTranvia(this);
+            long endTime3 = System.currentTimeMillis();
+            System.out.println("TiempoEjecucion: Grafo BUSES en " + (endTime3 - tiempoInicio) + " ms");
             GrafosSingleton.getGrafoBuses(this);
             long endTime = System.currentTimeMillis();
-            System.out.println("TiempoEjecucion: Grafos cargados en " + (endTime - tiempoInicio) + " ms");
-        }).start();
-        // hilo bici
-        new Thread(() -> {
+            System.out.println("TiempoEjecucion: Grafo BUSES en " + (endTime - endTime3) + " ms");
             GrafosSingleton.getGrafoBici(this);
-            long endTime = System.currentTimeMillis();
-            System.out.println("TiempoEjecucion: Grafos cargados en " + (endTime - tiempoInicio) + " ms");
+            long endTime2 = System.currentTimeMillis();
+            System.out.println("TiempoEjecucion: Grafo BICIS en " + (endTime2 - endTime) + " ms");
         }).start();
 
         // cargar idioma
@@ -92,7 +88,17 @@ public class MainActivity extends AppCompatActivity {
         super.attachBaseContext(actualizarContextoLocale(newBase, idioma));
     }
 
-    private Context actualizarContextoLocale(Context context, String codigoIdioma) {
+    public void actualizarContextoLocaleParaFragments(Context context, String codigoIdioma) {
+        System.out.println("MainActivity: actualizarContextoLocale");
+        setLocale(codigoIdioma, true);
+
+        actualizarFragmentos();
+        actualizarTituloToolbar();
+        actualizarNavbar();
+    }
+
+    public Context actualizarContextoLocale(Context context, String codigoIdioma) {
+        System.out.println("MainActivity: actualizarContextoLocale");
         Locale locale = new Locale(codigoIdioma);
         Locale.setDefault(locale);
 
@@ -129,6 +135,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void mostrarPopupIdioma() {
+        // no hace nada
+        /*
         PopupMenu popup = new PopupMenu(this, btnIdioma);
         popup.getMenuInflater().inflate(R.menu.idioma_menu, popup.getMenu());
 
@@ -155,6 +163,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
         popup.show();
+
+         */
     }
 
     private void actualizarBotonIdioma(String codigoIdioma) {
@@ -236,7 +246,6 @@ public class MainActivity extends AppCompatActivity {
         System.out.println("MainActivity: actualizarNavbar");
         BottomNavigationView navView = findViewById(R.id.nav_view);
         Menu menu = navView.getMenu();
-
         menu.findItem(R.id.navigation_home).setTitle(R.string.titulo_home);
         menu.findItem(R.id.navigation_mapa).setTitle(R.string.titulo_mapa);
         menu.findItem(R.id.navigation_perfil).setTitle(R.string.titulo_perfil);
@@ -251,17 +260,18 @@ public class MainActivity extends AppCompatActivity {
         System.out.println("MainActivity: actualizarTituloToolbar");
 
         if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
             NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
             int currentDest = navController.getCurrentDestination().getId();
 
             if (currentDest == R.id.navigation_home) {
-                getSupportActionBar().setTitle(R.string.titulo_home);
+                //getSupportActionBar().setTitle(R.string.titulo_home);
             }
             else if (currentDest == R.id.navigation_mapa) {
-                getSupportActionBar().setTitle(R.string.titulo_mapa);
+                //getSupportActionBar().setTitle(R.string.titulo_mapa);
             }
             else {
-                getSupportActionBar().setTitle(R.string.titulo_perfil);
+                //getSupportActionBar().setTitle(R.string.titulo_perfil);
             }
         }
     }

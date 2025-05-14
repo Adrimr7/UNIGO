@@ -82,4 +82,14 @@
         <item name="tint">?attr/colorOnSecondary</item>
         <item name="elevation">6dp</item>
     </style>
+    <!-- popup menu -->
+    <style name="Widget.App.PopupMenu" parent="Widget.MaterialComponents.PopupMenu">
+        <item name="android:textSize">18sp</item>
+        <item name="android:popupBackground">@color/surface</item>
+        <item name="android:dropDownHorizontalOffset">0dp</item>
+        <item name="android:dropDownVerticalOffset">2dp</item>
+        <item name="elevation">8dp</item>
+        <item name="android:layout_margin">4dp</item>
+    </style>
+
 </resources>
