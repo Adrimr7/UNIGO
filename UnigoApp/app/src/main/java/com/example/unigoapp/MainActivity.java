@@ -56,17 +56,15 @@ public class MainActivity extends AppCompatActivity {
         comprobarConexionInternet();
         empezarComprobacionesConexion();
 
-        // hilo buses y bici
+        // hilo tranvia, buses y bici
         new Thread(() -> {
             GrafosSingleton.getGrafoTranvia(this);
             long endTime3 = System.currentTimeMillis();
             System.out.println("TiempoEjecucion: Grafo TRANVIA en " + (endTime3 - tiempoInicio) + " ms");
+
+            // se cargan desde binario, por tanto no es necesario comprobar sus tiempos
             GrafosSingleton.getGrafoBuses(this);
-            long endTime = System.currentTimeMillis();
-            System.out.println("TiempoEjecucion: Grafo BUSES en " + (endTime - endTime3) + " ms");
             GrafosSingleton.getGrafoBici(this);
-            long endTime2 = System.currentTimeMillis();
-            System.out.println("TiempoEjecucion: Grafo BICIS en " + (endTime2 - endTime) + " ms");
         }).start();
 
         // cargar idioma
