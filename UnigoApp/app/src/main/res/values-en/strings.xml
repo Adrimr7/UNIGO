@@ -25,4 +25,9 @@
     <string name="calc_bus">Loading bus route...</string>
     <string name="tranvia">Tram</string>
     <string name="calc_tranvia">Loading tram route...</string>
+    <string name="salida_a">"Departure at: "</string>
+    <string name="bus_sale_a">"The bus departures at: "</string>
+    <string name="llegada_a">"Arrival: "</string>
+    <string name="destino">"Arrival station: "</string>
+    <string name="origen">"Departure station: "</string>
 </resources>

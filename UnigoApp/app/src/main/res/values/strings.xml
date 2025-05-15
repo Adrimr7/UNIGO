@@ -24,4 +24,9 @@
     <string name="titulo_home">Inicio</string>
     <string name="tranvia">Tranvía</string>
     <string name="calc_tranvia" >Cargando ruta de tranvía...</string>
+    <string name="salida_a">Salida a las:</string>
+    <string name="bus_sale_a">El bus sale a las:</string>
+    <string name="llegada_a">Llegada a las:</string>
+    <string name="destino">"Destino: "</string>
+    <string name="origen">Origen:</string>
 </resources>

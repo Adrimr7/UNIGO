@@ -1,6 +1,7 @@
 package com.example.unigoapp.interfaz.mapa;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -393,16 +394,17 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
                 requireContext(),
                 mvMapa,
                 rutaInfo.getEstacionOrigen(),
-                "Origen: " + rutaInfo.getNombreOrigen(),
+                getString(R.string.origen) + rutaInfo.getNombreOrigen() + "\n" + getString(R.string.salida_a) + rutaInfo.getProximoBus(),
                 R.drawable.ic_bus
         );
         mvMapa.getOverlays().add(markerOrigen);
 
+        ToastPersonalizado.showToast(getContext(), getString(R.string.bus_sale_a) + rutaInfo.getProximoBus());
         markerDestino = crearMarkerConTexto(
                 requireContext(),
                 mvMapa,
                 rutaInfo.getEstacionDestino(),
-                "Destino: " + rutaInfo.getNombreDestino(),
+                getString(R.string.destino) + rutaInfo.getNombreDestino() + "\n" + getString(R.string.llegada_a) + rutaInfo.getTiempoEstimado(),
                 R.drawable.ic_bus
         );
         mvMapa.getOverlays().add(markerDestino);
@@ -588,7 +590,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         
 
         try {
-            Field field = PopupMenu.class.getDeclaredField("mPopup");
+            @SuppressLint("DiscouragedPrivateApi") Field field = PopupMenu.class.getDeclaredField("mPopup");
             field.setAccessible(true);
             Object menuPopupHelper = field.get(popupMenu);
             Class<?> classPopupHelper = Class.forName(menuPopupHelper.getClass().getName());
@@ -684,15 +686,6 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
                 calcularYMostrarRutaTranvia(CENTRO_GASTEIZ);
                 progressDialog.dismiss();
             }, 100);
-        }
-    }
-
-    private void activarModoOffline(boolean offline) {
-        mvMapa.setUseDataConnection(!offline);
-        if (offline) {
-            ToastPersonalizado.showToast(requireContext(), "Modo sin conexión activado");
-        } else {
-            ToastPersonalizado.showToast(requireContext(), "Modo en línea activado");
         }
     }
 }

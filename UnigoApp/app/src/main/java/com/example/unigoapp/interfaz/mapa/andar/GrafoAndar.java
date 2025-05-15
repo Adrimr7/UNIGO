@@ -11,24 +11,28 @@ import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
-import org.json.JSONArray;
-import org.json.JSONObject;
+
 import org.osmdroid.util.GeoPoint;
 
-import java.io.BufferedInputStream;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
-import java.io.Serializable;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+//import org.json.JSONArray;
+//import org.json.JSONObject;
+//import java.io.BufferedInputStream;
+//import java.io.Serializable;
+//import java.nio.file.Files;
+//import java.nio.file.Paths;
+//import java.util.ArrayList;
 
 public class GrafoAndar {
     private Graph<GeoPoint, DefaultWeightedEdge> grafo;
@@ -42,15 +46,16 @@ public class GrafoAndar {
         this.nodosMap = new HashMap<>();
         construirGrafoEficiente();
     }
-
+    /*
     public void guardarGrafoYMapa(Graph<GeoPoint, DefaultWeightedEdge> grafo, Map<String, GeoPoint> nodosMap, String rutaArchivo) throws IOException {
-        /*
+
         try (ObjectOutputStream oos = new ObjectOutputStream(Files.newOutputStream(Paths.get(rutaArchivo)))) {
             oos.writeObject(grafo);
             oos.writeObject(nodosMap);
         }
-        */
+
     }
+
 
     public void cargarGrafoYMapa(String rutaArchivo) throws IOException, ClassNotFoundException {
         try (ObjectInputStream ois = new ObjectInputStream(Files.newInputStream(Paths.get(rutaArchivo)))) {
@@ -60,23 +65,7 @@ public class GrafoAndar {
             nodosMap = nodosMapActual;
         }
     }
-
-    private void logMemoria(String tag) {
-        Runtime runtime = Runtime.getRuntime();
-
-        long maxMemory = runtime.maxMemory();        // Máxima memoria que puede usar la app
-        long totalMemory = runtime.totalMemory();    // Memoria actualmente asignada
-        long freeMemory = runtime.freeMemory();      // Memoria libre dentro de la asignada
-        long usedMemory = totalMemory - freeMemory;  // Memoria usada real
-
-        Log.d(tag, String.format("Max: %.2f MB, Total: %.2f MB, Usada: %.2f MB, Libre: %.2f MB",
-                maxMemory / (1024.0 * 1024.0),
-                totalMemory / (1024.0 * 1024.0),
-                usedMemory / (1024.0 * 1024.0),
-                freeMemory / (1024.0 * 1024.0)));
-    }
-
-
+    */
     private void construirGrafoEficiente() {
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -126,7 +115,7 @@ public class GrafoAndar {
 
          */
     }
-
+    /*
     private String inputStreamToString(InputStream is) throws Exception {
         try (java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A")) {
             return s.hasNext() ? s.next() : "";
@@ -198,6 +187,8 @@ public class GrafoAndar {
         nodosMap.put(clave, punto);
         return punto;
     }
+
+     */
 
     public List<GeoPoint> calcularRuta(GeoPoint origen, GeoPoint destino) {
         long startTime = System.currentTimeMillis();

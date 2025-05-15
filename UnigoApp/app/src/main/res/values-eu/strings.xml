@@ -19,10 +19,15 @@
     <string name="permiso_ubi">Kokapenaren baimena</string>
     <string name="acceso_ubi">Zure kokalekurako baimena behar dugu ibilbide zehatzak erakusteko</string>
     <string name="entendido">Ulertuta</string>
-    <string name="mapa_sin_conexion">Internet barik moduko mapa</string>
+    <string name="mapa_sin_conexion">Internet gabeko mapa</string>
     <string name="calc_andando">Oinezko ibilbidea lortzen...</string>
     <string name="calc_bici">Bizikletarentzat ibilbidea lortzen...</string>
     <string name="calc_bus">Autobusez ibilbidea lortzen...</string>
     <string name="tranvia">Tranbia</string>
     <string name="calc_tranvia" >Tranbiaz ibilbidea lortzen...</string>
+    <string name="salida_a">"Irteera: "</string>
+    <string name="bus_sale_a">"Autobusaren irteera: "</string>
+    <string name="llegada_a">"Helmuga: "</string>
+    <string name="destino">"Helmuga geltokia: "</string>
+    <string name="origen">"Hasierako geltokia: "</string>
 </resources>
