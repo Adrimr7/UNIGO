@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -46,18 +47,37 @@ public class GrafoBus {
     private Map<String, GeoPoint> estacionesMap;
     private Map<String, EstacionProperties> estacionesProperties;
     private final Context context;
-    private static final double DISTANCIA_MINIMA_NODOS = 30.0; // 14 metros
+    private static final double DISTANCIA_MINIMA_NODOS = 16.0; // 20 metros
     private final BusSchedule busSchedule;
-    private static final Set<String> VALID_STOP_IDS = Set.of(
+    private static final Set<String> ID_PARADAS_VALIDAS = Set.of(
             "1029", "1327", "1027", "1028", "1036", "1025", "1037", "1026",
             "1034", "1023", "1035", "1024", "1328", "1032", "1033", "1022",
             "1041", "1031", "1030", "1040"
     );
-    private static final List<String> ORDERED_STOP_IDS = List.of(
-            "1022", "1023", "1024", "1025", "1026", "1027", "1028", "1328",
-            "1029", "1030", "1031", "1032", "1033", "1034", "1035", "1036",
-            "1037", "1327", "1040", "1041"
+
+    private static final Map<String, String> SIG_PARADA = Map.ofEntries(
+            Map.entry("1023", "1022"),
+            Map.entry("1024", "1023"),
+            Map.entry("1025", "1024"),
+            Map.entry("1026", "1025"),
+            Map.entry("1027", "1026"),
+            Map.entry("1028", "1027"),
+            Map.entry("1328", "1028"),
+            Map.entry("1029", "1328"),
+            Map.entry("1030", "1029"),
+            Map.entry("1031", "1030"),
+            Map.entry("1032", "1031"),
+            Map.entry("1033", "1032"),
+            Map.entry("1034", "1033"),
+            Map.entry("1035", "1034"),
+            Map.entry("1036", "1035"),
+            Map.entry("1037", "1036"),
+            Map.entry("1327", "1037"),
+            Map.entry("1040", "1327"),
+            Map.entry("1041", "1040"),
+            Map.entry("1022", "1041")
     );
+
 
     public GrafoBus(Context context) {
         this.context = context;
@@ -118,8 +138,8 @@ public class GrafoBus {
                     (System.currentTimeMillis() - startTime) + " ms");
             Log.d("Estadisticas", "Nodos: " + grafo.vertexSet().size() +
                     ", Aristas: " + grafo.edgeSet().size());
-            File archivo = new File(context.getFilesDir(), "grafo_buses_simple.bin");
-            guardarGrafoYMapa(grafo, nodosMap, archivo.getAbsolutePath(), estacionesMap, estacionesProperties);
+            //File archivo = new File(context.getFilesDir(), "grafo_buses_simple.bin");
+            //guardarGrafoYMapa(grafo, nodosMap, archivo.getAbsolutePath(), estacionesMap, estacionesProperties);
         } catch (Exception e) {
             Log.e("GrafoError", "Error construyendo grafo", e);
         }
@@ -143,12 +163,9 @@ public class GrafoBus {
 
                 String[] parts = line.split(",");
                 if (parts.length >= 5) {  // trip_id,arrival_time,departure_time,stop_id,stop_sequence
-                    String tripId = parts[0];
-                    String arrivalTime = parts[1];
-                    String stopId = parts[3];
-                    int stopSequence = Integer.parseInt(parts[4]);
                     try {
-                        busSchedule.addArrivalTime(stopId, arrivalTime);
+                        // arrival y el stop_id
+                        busSchedule.addArrivalTime(parts[3], parts[1]);
                     } catch (Exception e) {
                         Log.e("Horarios", "Error al procesar horario: " + line, e);
                     }
@@ -187,7 +204,7 @@ public class GrafoBus {
         if ("Point".equals(geometry.getString("type")) &&
                 properties.has("stop_id") && properties.has("stop_name")) {
             String stopId = properties.getString("stop_id");
-            if (!VALID_STOP_IDS.contains(stopId)) return;
+            if (!ID_PARADAS_VALIDAS.contains(stopId)) return;
 
             JSONArray coordArray = geometry.getJSONArray("coordinates");
             GeoPoint estacion = new GeoPoint(coordArray.getDouble(1), coordArray.getDouble(0));
@@ -311,37 +328,38 @@ public class GrafoBus {
 
     public RutaInfo calcularRuta(GeoPoint origen, GeoPoint destino) {
         long startTime = System.currentTimeMillis();
-
+        RutaInfo rutaDevolver = new RutaInfo(new ArrayList<>(), "No encontrada", "No encontrada", origen, destino, LocalTime.now(), LocalTime.now());;
         // estaciones cercanas
         GeoPoint estacionInicio = encontrarEstacionCercana(origen);
         GeoPoint estacionFin = encontrarEstacionCercana(destino);
 
         if (estacionInicio == null || estacionFin == null || estacionInicio.equals(estacionFin)) {
-            return new RutaInfo(new ArrayList<>(), "No encontrada", "No encontrada", origen, destino, LocalTime.now(), LocalTime.now());
+            return rutaDevolver;
         }
 
         try {
-            DijkstraShortestPath<GeoPoint, DefaultWeightedEdge> dijkstra =
-                    new DijkstraShortestPath<>(grafo);
-            GraphPath<GeoPoint, DefaultWeightedEdge> path = dijkstra.getPath(estacionInicio, estacionFin);
 
-            if (path == null) {
-                Log.d("RutaDebug", "No se encontró ruta entre las estaciones");
+            List<GeoPoint> rutaFinal = new ArrayList<>();
+
+            GeoPoint paradaActual = estacionInicio;
+
+            while (!paradaActual.equals(estacionFin)) {
+                System.out.println(paradaActual);
+                String idActual = encontrarStopId(paradaActual);
+                String siguienteId = SIG_PARADA.get(idActual);
+
+                GeoPoint siguienteParada = estacionesMap.get(siguienteId);
+                rutaFinal.add(siguienteParada);
+                paradaActual = siguienteParada;
+
             }
-
-            List<GeoPoint> rutaFinal = path != null ?
-                    new ArrayList<>(path.getVertexList()) :
-                    new ArrayList<>();
-
-            Log.d("TiempoRuta", "Ruta calculada en: " + (System.currentTimeMillis() - startTime) + " ms");
-            Log.d("Info", "Distancia desde origen a estación más cercana: " +
-                    origen.distanceToAsDouble(estacionInicio));
-            String nombreOrigen = obtenerNombreEstacion(estacionInicio);
-            String nombreDestino = obtenerNombreEstacion(estacionFin);
-
-            return new RutaInfo(rutaFinal, nombreOrigen, nombreDestino, estacionInicio,
-                    estacionFin, obtenerSiguienteLlegada(estacionInicio), obtenerLlegadaEnTiempo(estacionFin, LocalTime.now()));
-        } catch (Exception e) {
+            int minutosEstimados = Math.max(0, rutaFinal.size() - 1) * 2;
+            LocalTime horaLlegadaEstimada = LocalTime.now().plusMinutes(minutosEstimados);
+            rutaDevolver = new RutaInfo(rutaFinal, obtenerNombreEstacion(estacionInicio), obtenerNombreEstacion(estacionFin),
+                    origen, destino, obtenerSiguienteLlegada(estacionInicio), horaLlegadaEstimada);
+            return rutaDevolver;
+        }
+        catch (Exception e) {
             Log.e("RutaError", "Error calculando ruta", e);
             return null;
         }
@@ -355,6 +373,7 @@ public class GrafoBus {
         return null;
     }
     public LocalTime obtenerLlegadaEnTiempo(GeoPoint estacion, LocalTime tiempo) {
+        // estimar dependiendo de la cantidad de estaciones en la ruta
         String stopId = encontrarStopId(estacion);
         if (stopId != null) {
             return busSchedule.getNextArrival(stopId, tiempo);
