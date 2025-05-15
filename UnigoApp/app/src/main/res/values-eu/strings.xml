@@ -15,4 +15,8 @@
     <string name="caminar">Oinez</string>
     <string name="en_bici">Bizikletaz</string>
     <string name="en_bus">Autobusez</string>
+    <string name="temperatura">Tenperatura</string>
+    <string name="pronostico">Iragarpena</string>
+    <string name="calidad_aire">Airearen kalitatea</string>
+    <string name="offline">Konexioa beharrezkoa da</string>
 </resources>

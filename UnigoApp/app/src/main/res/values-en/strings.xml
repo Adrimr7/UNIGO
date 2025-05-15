@@ -15,4 +15,8 @@
     <string name="caminar">Walking</string>
     <string name="en_bici">With a Bike</string>
     <string name="en_bus">By Bus</string>
+    <string name="temperatura">Temperature</string>
+    <string name="pronostico">Forecast</string>
+    <string name="calidad_aire">Air quality</string>
+    <string name="offline">Not available offline</string>
 </resources>

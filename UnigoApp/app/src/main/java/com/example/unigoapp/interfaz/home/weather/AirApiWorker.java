@@ -28,15 +28,17 @@ public class AirApiWorker extends Worker {
     @Override
     public Result doWork() {
         String airJson = air_api_call();
-        boolean success = saveData(airJson);
-        if (success){
+        String airJson_eusk = air_api_call_eusk();
+        boolean success = saveData(airJson, false);
+        boolean success_eusk = saveData(airJson_eusk,true);
+        if (success && success_eusk){
             return Result.success();
         } else {
             return Result.failure();
         }
     }
 
-    private boolean saveData(String airJson){
+    private boolean saveData(String airJson, boolean is_eusk){
         try {
             JSONArray jsonArray = new JSONArray(airJson);
             String firstAirQualityStation = null;
@@ -64,8 +66,11 @@ public class AirApiWorker extends Worker {
                 Context context = getApplicationContext();
                 SharedPreferences prefs = context.getSharedPreferences("air", Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = prefs.edit();
-
-                editor.putString("quality", firstAirQualityStation);
+                if (is_eusk){
+                    editor.putString("quality_eusk", firstAirQualityStation);
+                } else {
+                    editor.putString("quality", firstAirQualityStation);
+                }
 
                 editor.apply();
 
@@ -89,6 +94,50 @@ public class AirApiWorker extends Worker {
             String formattedDateMidn = atMidnight.format(formatter);
 
             String endpoint = "https://api.euskadi.eus/air-quality/measurements/hourly/stations/85/from/" + formattedDateMidn + "/to/" + formattedDateTime;
+            Log.i("la url", "URL:" + endpoint);
+            URL url = new URL(endpoint);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+
+            int responseCode = connection.getResponseCode();
+            System.out.println("Código de respuesta: " + responseCode);
+
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader in = new BufferedReader(
+                        new InputStreamReader(connection.getInputStream())
+                );
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                // Imprimir la respuesta JSON
+                System.out.println("Respuesta de la API:");
+                System.out.println(response.toString());
+                return response.toString();
+            } else {
+                System.out.println("Error en la solicitud: " + responseCode);
+                return null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private String air_api_call_eusk() {
+        try {
+            LocalDateTime now = LocalDateTime.now();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+            String formattedDateTime = now.format(formatter);
+
+            LocalDateTime atMidnight = now.withHour(0).withMinute(0).withSecond(0).withNano(0);
+            String formattedDateMidn = atMidnight.format(formatter);
+
+            String endpoint = "https://api.euskadi.eus/air-quality/measurements/hourly/stations/85/from/" + formattedDateMidn + "/to/" + formattedDateTime + "?lang=BASQUE";
             Log.i("la url", "URL:" + endpoint);
             URL url = new URL(endpoint);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();

@@ -1,5 +1,7 @@
 package com.example.unigoapp.interfaz.home;
 
+import static android.content.Context.MODE_PRIVATE;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -35,6 +37,11 @@ public class HomeFragment extends Fragment implements MainActivity.UpdatableFrag
     private TextView tvOfflineAir;
     private TextView tvAirQuality;
     private ImageView ivWeather;
+    private TextView tvTempTitle;
+    private TextView tvForecastTitle;
+    private TextView tvAirTitle;
+    private ImageView ivMax;
+    private ImageView ivMin;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -52,6 +59,11 @@ public class HomeFragment extends Fragment implements MainActivity.UpdatableFrag
         tvforecast = binding.forecast;
         tvAirQuality = binding.airQuallityText;
         ivWeather = binding.weatherImg;
+        tvTempTitle = binding.tempTitle;
+        tvForecastTitle = binding.forecastTitle;
+        tvAirTitle = binding.airTitle;
+        ivMax = binding.maxImg;
+        ivMin = binding.minImg;
 
         tvOfflineAir = binding.disabledTextAir;
 
@@ -86,23 +98,33 @@ public class HomeFragment extends Fragment implements MainActivity.UpdatableFrag
     private void updateAir(){
         Context context = getContext();
 
-        SharedPreferences airPrefs = context.getSharedPreferences("air", Context.MODE_PRIVATE);
+        SharedPreferences airPrefs = context.getSharedPreferences("air", MODE_PRIVATE);
+        String language = context.getSharedPreferences("Ajustes", MODE_PRIVATE).getString("Idioma", "es");
 
-        String quality = airPrefs.getString("quality", null);
+
+        String quality_es = airPrefs.getString("quality", null);
+        String quality_eu = airPrefs.getString("quality_eusk", null);
+
 
         Boolean offline = ((MainActivity) requireActivity()).estaOffline();
 
         Log.e("ONLINE","ESTADO: " + offline);
-        Log.e("AIRE","CALIDAD: " + quality);
+        Log.e("AIRE","CALIDAD: " + quality_es);
 
 
-        if ((offline) || quality == null){
+        if ((offline) || quality_es == null || quality_eu == null){
             tvOfflineAir.setVisibility(View.VISIBLE);
             tvAirQuality.setVisibility(View.INVISIBLE);
         } else{
             tvOfflineAir.setVisibility(View.INVISIBLE);
             tvAirQuality.setVisibility(View.VISIBLE);
-            tvAirQuality.setText(quality);
+            if (language.equals("es")) {
+                tvAirQuality.setText(String.valueOf(quality_es));
+            } else if (language.equals("eu")) {
+                tvAirQuality.setText(String.valueOf(quality_eu));
+            } else{
+                tvAirQuality.setText("No data for this language");
+            }
 
         }
     }
@@ -131,7 +153,8 @@ public class HomeFragment extends Fragment implements MainActivity.UpdatableFrag
 
     public void updateWeather(){
         Context context = getContext();
-        SharedPreferences prefs = context.getSharedPreferences("weather", Context.MODE_PRIVATE);
+        SharedPreferences prefs = context.getSharedPreferences("weather", MODE_PRIVATE);
+        String language = context.getSharedPreferences("Ajustes", MODE_PRIVATE).getString("Idioma", "es");
 
         int tempMin = (int) prefs.getFloat("temp_min", -99);
         int tempMax = (int) prefs.getFloat("temp_max", -99);
@@ -153,31 +176,47 @@ public class HomeFragment extends Fragment implements MainActivity.UpdatableFrag
             tvMaxTemp.setVisibility(View.INVISIBLE);
             tvMintemp.setVisibility(View.INVISIBLE);
             tvforecast.setVisibility(View.INVISIBLE);
+            ivMax.setVisibility(View.INVISIBLE);
+            ivMin.setVisibility(View.INVISIBLE);
+            tvForecastTitle.setVisibility(View.INVISIBLE);
+            ivWeather.setVisibility(View.INVISIBLE);
+
         } else{
             selectWeatherIcon(forecastEs);
+            ivMax.setVisibility(View.VISIBLE);
+            ivMin.setVisibility(View.VISIBLE);
+            tvForecastTitle.setVisibility(View.VISIBLE);
+            ivWeather.setVisibility(View.VISIBLE);
             tvOfflineWeather.setVisibility(View.INVISIBLE);
             tvNowtemp.setText(String.valueOf(tempNow)+"ºC");
             tvMaxTemp.setText(String.valueOf(tempMax)+"º");
             tvMintemp.setText(String.valueOf(tempMin)+"º");
-            tvforecast.setText(String.valueOf(forecastEs));
+            if (language.equals("es")) {
+                tvforecast.setText(String.valueOf(forecastEs));
+            } else if (language.equals("eu")) {
+                tvforecast.setText(String.valueOf(forecastEu));
+            } else{
+                tvforecast.setText("There is not forecast data for the selected languague.");
+            }
         }
 
     }
 
     private void selectWeatherIcon(String forecast){
-        if (forecast.contains("nub")){
-            ivWeather.setImageResource(R.drawable.cloud);
-        } else if (forecast.contains("chub") || (forecast.contains("lluv"))) {
+        if (forecast.contains("torm")) {
+            ivWeather.setImageResource(R.drawable.storm);
+        } else if (forecast.contains("chub") || (forecast.contains("lluv"))){
             ivWeather.setImageResource(R.drawable.rain);
+        } else if (forecast.contains("nub")) {
+            ivWeather.setImageResource(R.drawable.cloud);
         } else if (forecast.contains("sol")){
             ivWeather.setImageResource(R.drawable.sun);
-        } else if (forecast.contains("torm")){
-            ivWeather.setImageResource(R.drawable.storm);
         } else{
             ivWeather.setImageResource(R.drawable.sun);
         }
 
     }
+
 
     @Override
     public void onDestroyView() {
@@ -187,6 +226,13 @@ public class HomeFragment extends Fragment implements MainActivity.UpdatableFrag
     @Override
     public void actualizarTextos() {
         System.out.println("HomeFrag: actualizarTextos");
-        //tvHome.setText(R.string.texto_home);
+        updateWeather();
+        updateAir();
+        tvTempTitle.setText(R.string.temperatura);
+        tvForecastTitle.setText(R.string.pronostico);
+        tvAirTitle.setText(R.string.calidad_aire);
+        tvOfflineWeather.setText(R.string.offline);
+        tvOfflineAir.setText(R.string.offline);
+
     }
 }
