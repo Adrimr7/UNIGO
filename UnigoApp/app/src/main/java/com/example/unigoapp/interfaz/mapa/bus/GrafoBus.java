@@ -9,9 +9,10 @@ import com.example.unigoapp.interfaz.mapa.RutaInfo;
 
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
+import org.jgrapht.alg.shortestpath.DijkstraManyToManyShortestPaths;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.graph.DefaultWeightedEdge;
-import org.jgrapht.graph.SimpleWeightedGraph;
+import org.jgrapht.graph.SimpleDirectedWeightedGraph;
 
 import org.osmdroid.util.GeoPoint;
 
@@ -31,27 +32,36 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-//import org.json.JSONArray;
-//import org.json.JSONObject;
-//import java.io.File;
-//import java.io.ObjectOutputStream;
-//import java.io.Serializable;
-//import java.nio.file.Files;
-//import java.nio.file.Paths;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import java.io.File;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class GrafoBus {
-    private Graph<GeoPoint, DefaultWeightedEdge> grafo;
+    private final Graph<GeoPoint, DefaultWeightedEdge> grafo;
     private Map<String, GeoPoint> nodosMap;
     private Map<String, GeoPoint> estacionesMap;
     private Map<String, EstacionProperties> estacionesProperties;
     private final Context context;
-    private static final double DISTANCIA_MINIMA_NODOS = 14.0; // 14 metros
+    private static final double DISTANCIA_MINIMA_NODOS = 30.0; // 14 metros
     private final BusSchedule busSchedule;
-
+    private static final Set<String> VALID_STOP_IDS = Set.of(
+            "1029", "1327", "1027", "1028", "1036", "1025", "1037", "1026",
+            "1034", "1023", "1035", "1024", "1328", "1032", "1033", "1022",
+            "1041", "1031", "1030", "1040"
+    );
+    private static final List<String> ORDERED_STOP_IDS = List.of(
+            "1022", "1023", "1024", "1025", "1026", "1027", "1028", "1328",
+            "1029", "1030", "1031", "1032", "1033", "1034", "1035", "1036",
+            "1037", "1327", "1040", "1041"
+    );
 
     public GrafoBus(Context context) {
         this.context = context;
-        this.grafo = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
+        this.grafo = new SimpleDirectedWeightedGraph<>(DefaultWeightedEdge.class);
         this.nodosMap = new HashMap<>();
         this.estacionesMap = new HashMap<>();
         this.estacionesProperties = new HashMap<>();
@@ -59,7 +69,7 @@ public class GrafoBus {
         construirGrafoEficiente();
         cargarHorarios();
     }
-
+    /*
     private void construirGrafoEficiente() {
         ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -91,8 +101,8 @@ public class GrafoBus {
             }
         });
     }
+    */
 
-    /*
     private void construirGrafoEficiente() {
 
         long startTime = System.currentTimeMillis();
@@ -108,7 +118,7 @@ public class GrafoBus {
                     (System.currentTimeMillis() - startTime) + " ms");
             Log.d("Estadisticas", "Nodos: " + grafo.vertexSet().size() +
                     ", Aristas: " + grafo.edgeSet().size());
-            File archivo = new File(context.getFilesDir(), "grafo_buses.bin");
+            File archivo = new File(context.getFilesDir(), "grafo_buses_simple.bin");
             guardarGrafoYMapa(grafo, nodosMap, archivo.getAbsolutePath(), estacionesMap, estacionesProperties);
         } catch (Exception e) {
             Log.e("GrafoError", "Error construyendo grafo", e);
@@ -117,7 +127,6 @@ public class GrafoBus {
     }
 
 
-     */
     private void cargarHorarios() {
         try (InputStream is = context.getAssets().open("horarios_bus_simple.txt")) {
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));
@@ -150,7 +159,7 @@ public class GrafoBus {
             System.out.println("Horarios" + " Error en carga de horarios" + e);
         }
     }
-    /*
+
     public void guardarGrafoYMapa(Graph<GeoPoint, DefaultWeightedEdge> grafo, Map<String, GeoPoint> nodosMap,
                                   String rutaArchivo, Map<String, GeoPoint> estacionesMap, Map<String, EstacionProperties> estacionesProperties) throws IOException {
 
@@ -176,15 +185,16 @@ public class GrafoBus {
 
         // procesar estaciones de bus
         if ("Point".equals(geometry.getString("type")) &&
-            properties.has("stop_id") && properties.has("stop_name")) {
+                properties.has("stop_id") && properties.has("stop_name")) {
+            String stopId = properties.getString("stop_id");
+            if (!VALID_STOP_IDS.contains(stopId)) return;
+
             JSONArray coordArray = geometry.getJSONArray("coordinates");
             GeoPoint estacion = new GeoPoint(coordArray.getDouble(1), coordArray.getDouble(0));
-            int stopId = properties.getInt("stop_id");
-            String stopIdStr = String.valueOf(stopId);
             String nombre = properties.getString("stop_name");
 
-            estacionesMap.put(stopIdStr, estacion);
-            estacionesProperties.put(stopIdStr, new EstacionProperties(nombre, stopId));
+            estacionesMap.put(stopId, estacion);
+            estacionesProperties.put(stopId, new EstacionProperties(nombre, Integer.parseInt(stopId)));
             nodosMap.put(String.format("%.6f,%.6f", estacion.getLatitude(), estacion.getLongitude()), estacion);
             grafo.addVertex(estacion);
             return;
@@ -268,13 +278,13 @@ public class GrafoBus {
 
         return masCercano;
     }
-    */
+
     private GeoPoint encontrarEstacionCercana(GeoPoint punto) {
         GeoPoint masCercana = null;
         double distanciaMinima = Double.MAX_VALUE;
 
-        Log.d("BusSearch", String.format("Buscando estación cercana a: Lat: %.6f, Lon: %.6f", 
-            punto.getLatitude(), punto.getLongitude()));
+        Log.d("BusSearch", String.format("Buscando estación cercana a: Lat: %.6f, Lon: %.6f",
+                punto.getLatitude(), punto.getLongitude()));
 
         Log.d("BusSearch", "Número total de estaciones: " + estacionesMap.size());
 
@@ -290,8 +300,8 @@ public class GrafoBus {
 
         if (masCercana != null) {
             String nombreEstacion = obtenerNombreEstacion(masCercana);
-            Log.d("BusSearch", String.format("Estación más cercana encontrada: %s a %.2f metros", 
-                nombreEstacion, distanciaMinima));
+            Log.d("BusSearch", String.format("Estación más cercana encontrada: %s a %.2f metros",
+                    nombreEstacion, distanciaMinima));
         } else {
             Log.d("BusSearch", "No se encontró ninguna estación cercana");
         }
@@ -308,19 +318,11 @@ public class GrafoBus {
 
         if (estacionInicio == null || estacionFin == null || estacionInicio.equals(estacionFin)) {
             return new RutaInfo(new ArrayList<>(), "No encontrada", "No encontrada", origen, destino, LocalTime.now(), LocalTime.now());
-        } 
+        }
 
         try {
-            /*
-            for (DefaultWeightedEdge edge : grafo.outgoingEdgesOf(estacionInicio)) {
-                GeoPoint target = grafo.getEdgeTarget(edge);
-                double weight = grafo.getEdgeWeight(edge);
-                Log.d("RutaDebug", String.format("Arista desde origen a %f,%f con peso: %f", 
-                    target.getLatitude(), target.getLongitude(), weight));
-            }
-             */
             DijkstraShortestPath<GeoPoint, DefaultWeightedEdge> dijkstra =
-                new DijkstraShortestPath<>(grafo);
+                    new DijkstraShortestPath<>(grafo);
             GraphPath<GeoPoint, DefaultWeightedEdge> path = dijkstra.getPath(estacionInicio, estacionFin);
 
             if (path == null) {
@@ -328,12 +330,12 @@ public class GrafoBus {
             }
 
             List<GeoPoint> rutaFinal = path != null ?
-                new ArrayList<>(path.getVertexList()) :
-                new ArrayList<>();
+                    new ArrayList<>(path.getVertexList()) :
+                    new ArrayList<>();
 
             Log.d("TiempoRuta", "Ruta calculada en: " + (System.currentTimeMillis() - startTime) + " ms");
             Log.d("Info", "Distancia desde origen a estación más cercana: " +
-                  origen.distanceToAsDouble(estacionInicio));            
+                    origen.distanceToAsDouble(estacionInicio));
             String nombreOrigen = obtenerNombreEstacion(estacionInicio);
             String nombreDestino = obtenerNombreEstacion(estacionFin);
 

@@ -26,6 +26,9 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.TextView;
+
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
@@ -42,6 +45,7 @@ import com.example.unigoapp.utils.ToastPersonalizado;
 import com.example.unigoapp.utils.GrafosSingleton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import org.json.JSONException;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
 import org.osmdroid.events.MapEventsReceiver;
@@ -56,11 +60,20 @@ import org.osmdroid.views.overlay.Polyline;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.io.File;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+import java.io.File;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class MapaFragment extends Fragment implements MainActivity.UpdatableFragment {
 
@@ -221,8 +234,17 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         Marker marker = crearMarkerConTexto(requireContext(), mvMapa, CENTRO_GASTEIZ, "Vitoria-Gasteiz", R.drawable.ic_mi_ubicacion);
         mvMapa.getOverlays().add(marker);
         mvMapa.invalidate();
+/*
+        Thread hiloBuses = new Thread(() -> {
+            long startTime = System.currentTimeMillis();
+            cargarBuses();
+            long endTime = System.currentTimeMillis();
+            long duration = endTime - startTime;
+            System.out.println("TiempoEjecucion" + "cargarBuses tarda: " + duration + " ms");
+        });
+        hiloBuses.start();
 
-        /*
+
         Marker marker = new Marker(mvMapa);
         marker.setPosition(CENTRO_GASTEIZ);
         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
@@ -431,7 +453,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         mvMapa.invalidate();
     }
 
-    /*
+
     private void cargarCarrilesBici() {
         try {
             InputStream is = requireContext().getAssets().open("viasciclistas23.geojson");
@@ -563,7 +585,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
                 throw new RuntimeException(e);
             }
         }
-        */
+
     private void calcularYMostrarRutaAndando(GeoPoint destino) {
 
         List<GeoPoint> ruta = GrafosSingleton.calcRutaAndar(destino, PUNTO_UNIVERSIDAD);
