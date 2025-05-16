@@ -1,14 +1,13 @@
 <resources>
-    <string name="app_name">UnigoApp</string>
-    <string name="titulo_home">Inicio</string>
+    <string name="app_name">EHUgo!</string>
     <string name="titulo_mapa">Mapa</string>
-    <string name="titulo_perfil">Mi Perfil</string>
+    <string name="titulo_perfil">Idioma</string>
     <string name="castellano">Castellano</string>
     <string name="euskera">Euskera</string>
     <string name="english">English</string>
     <string name="texto_home">Este es el fragmento de home</string>
     <string name="texto_mapa">Este es el fragmento de mapa</string>
-    <string name="texto_perfil">Este es el fragmento de perfil</string>
+    <string name="texto_perfil">Este es el fragmento de idioma</string>
     <string name="cambiar_idioma">Cambiar idioma</string>
     <string name="opciones_ruta">Ruta</string>
     <string name="caminar">Caminar</string>
@@ -18,6 +17,24 @@
     <string name="pronostico">Pronóstico</string>
     <string name="calidad_aire">Calidad del aire</string>
     <string name="offline">No disponible sin conexión</string>
-
-
+    <string name="cargando_grafos">Cargando grafos...</string>
+    <string name="permiso_ubi">Permiso de ubicación</string>
+    <string name="acceso_ubi">Necesitamos acceso a tu ubicación para mostrarte rutas precisas</string>
+    <string name="entendido">Entendido</string>
+    <string name="mapa_sin_conexion">Mapa en modo sin conexión</string>
+    <string name="calc_andando">Calculando ruta andando...</string>
+    <string name="calc_bici">Calculando ruta en bici...</string>
+    <string name="calc_bus">Calculando ruta en bus...</string>
+    <string name="titulo_home">Inicio</string>
+    <string name="tranvia">Tranvía</string>
+    <string name="calc_tranvia" >Cargando ruta de tranvía...</string>
+    <string name="salida_a">"Salida a las: "</string>
+    <string name="bus_sale_a">"El bus sale a las: "</string>
+    <string name="llegada_a">"Llegada a las: "</string>
+    <string name="destino">"Destino: "</string>
+    <string name="origen">"Origen: "</string>
+    <string name="ubicacion_no_disp">Ubicación no disponible en este momento.</string>
+    <string name="tranvia_sale_a">"El tranvía sale a las: "</string>
+    <string name="ya_se_pueden_ver_rutas_andando">Ya se pueden ver rutas andando.</string>
+    <string name="calc_toast_andando">Cargando grafo de andar. Espere.</string>
 </resources>

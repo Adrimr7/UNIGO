@@ -14,6 +14,7 @@ public class MapaVistaModelo extends ViewModel {
     private GrafoCarrilesBiciOptimizado grafoCarrilesBici;
     private GrafoBus grafoBuses;
     private GrafoAndar grafoAndar;
+    public boolean estaCargando = true;
 
     public MapaVistaModelo() {
         mText = new MutableLiveData<>();
@@ -56,5 +57,8 @@ public class MapaVistaModelo extends ViewModel {
 
     public void setGrafoAndar(GrafoAndar grafo) {
         grafoAndar = grafo;
+    }
+    public void setCargandoGrafoAndar(boolean esta) {
+        estaCargando = esta;
     }
 }

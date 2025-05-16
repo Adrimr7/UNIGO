@@ -6,9 +6,9 @@
     <color name="primary_dark">#063B45</color>
 
     <!-- colores secundarios-->
-    <color name="secondary">#E65100</color>
-    <color name="secondary_variant">#FF8A3D</color>
-    <color name="secondary_dark">#AC3D00</color> 
+    <color name="secondary">#FB9039</color>
+    <color name="secondary_variant">#FFE9D0</color>
+    <color name="secondary_dark">#91705A</color>
 
     <color name="background">#FFFFFF</color>
     <color name="surface">#F5F5F5</color>

@@ -1,6 +1,8 @@
 package com.example.unigoapp.interfaz.mapa.bici;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import org.jgrapht.Graph;
@@ -12,16 +14,24 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.osmdroid.util.GeoPoint;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class GrafoCarrilesBiciOptimizado {
-    private final Graph<GeoPoint, DefaultWeightedEdge> grafo;
-    private final Map<String, GeoPoint> nodosMap;
+    private Graph<GeoPoint, DefaultWeightedEdge> grafo;
+    private Map<String, GeoPoint> nodosMap;
     private final Context context;
     private static final double DISTANCIA_MINIMA_NODOS = 15.0; // 15 metros
 
@@ -33,22 +43,36 @@ public class GrafoCarrilesBiciOptimizado {
     }
 
     private void construirGrafoEficiente() {
-        long startTime = System.currentTimeMillis();
+        ExecutorService executor = Executors.newSingleThreadExecutor();
 
-        try (InputStream is = context.getAssets().open("viasciclistas23.geojson")) {
-            String json = inputStreamToString(is);
-            JSONArray features = new JSONObject(json).getJSONArray("features");
+        executor.execute(() -> {
+            long startTime = System.nanoTime();
 
-            for (int i = 0; i < features.length(); i++) {
-                procesarFeature(features.getJSONObject(i));
+            try (InputStream is = context.getAssets().open("grafo_bicis.bin");
+                 ObjectInputStream ois = new ObjectInputStream(is)) {
+
+                Graph<GeoPoint, DefaultWeightedEdge> grafoCargado = (Graph<GeoPoint, DefaultWeightedEdge>) ois.readObject();
+                Map<String, GeoPoint> nodosMapCargado = (Map<String, GeoPoint>) ois.readObject();
+                long durationMs = (System.nanoTime() - startTime) / 1_000_000;
+
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    this.grafo = grafoCargado;
+                    this.nodosMap = nodosMapCargado;
+
+                    Log.d("TiempoGrafo", "Grafo cargado en: " + durationMs + " ms");
+                    Log.d("Estadisticas", "Nodos: " + grafo.vertexSet().size() +
+                            ", Aristas: " + grafo.edgeSet().size());
+                });
+
+            } catch (IOException | ClassNotFoundException e) {
+                Log.e("CargaGrafo", "Error al cargar grafo desde assets", e);
             }
-
-            Log.d("TiempoGrafo", "Grafo construido en: " +
-                    (System.currentTimeMillis() - startTime) + " ms");
-            Log.d("Estadisticas", "Nodos: " + grafo.vertexSet().size() +
-                    ", Aristas: " + grafo.edgeSet().size());
-        } catch (Exception e) {
-            Log.e("GrafoError", "Error construyendo grafo", e);
+        });
+    }
+    public void guardarGrafoYMapa(Graph<GeoPoint, DefaultWeightedEdge> grafo, Map<String, GeoPoint> nodosMap, String rutaArchivo) throws IOException {
+        try (ObjectOutputStream oos = new ObjectOutputStream(Files.newOutputStream(Paths.get(rutaArchivo)))) {
+            oos.writeObject(grafo);
+            oos.writeObject(nodosMap);
         }
     }
 

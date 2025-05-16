@@ -6,26 +6,20 @@ import android.content.res.Resources;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.PopupMenu;
-import android.widget.Toast;
 
+import com.example.unigoapp.utils.GrafosSingleton;
 import com.example.unigoapp.utils.ToastPersonalizado;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.view.menu.MenuBuilder;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
@@ -35,25 +29,46 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.example.unigoapp.databinding.ActivityMainBinding;
 
-import java.lang.reflect.Field;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private ImageButton btnIdioma;
-    private boolean estaOffline = false;
+    private boolean estaOffline = true;
     private Handler handlerConexion;
     private static final long INTERVALO_COMPROBAR_CONEXION = 2000; // 2 segs
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // hilo andar
+        long tiempoInicio = System.currentTimeMillis();
+        new Thread(() -> {
+            GrafosSingleton.getGrafoAndar(this);
+            long endTime = System.currentTimeMillis();
+            System.out.println("TiempoEjecucion: Grafo ANDAR cargados en " + (endTime - tiempoInicio) + " ms");
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                ToastPersonalizado.showToast(getApplicationContext(), getString(R.string.ya_se_pueden_ver_rutas_andando));
+            }, 48000);
+        }).start();
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         comprobarConexionInternet();
         empezarComprobacionesConexion();
+
+        // hilo tranvia, buses y bici
+        new Thread(() -> {
+            GrafosSingleton.getGrafoTranvia(this);
+            long endTime3 = System.currentTimeMillis();
+            System.out.println("TiempoEjecucion: Grafo TRANVIA en " + (endTime3 - tiempoInicio) + " ms");
+
+            // se cargan desde binario, por tanto no es necesario comprobar sus tiempos
+            GrafosSingleton.getGrafoBuses(this);
+            GrafosSingleton.getGrafoBici(this);
+        }).start();
 
         // cargar idioma
         String idioma = getSharedPreferences("Ajustes", MODE_PRIVATE).getString("Idioma", "es");
@@ -74,7 +89,17 @@ public class MainActivity extends AppCompatActivity {
         super.attachBaseContext(actualizarContextoLocale(newBase, idioma));
     }
 
-    private Context actualizarContextoLocale(Context context, String codigoIdioma) {
+    public void actualizarContextoLocaleParaFragments(Context context, String codigoIdioma) {
+        System.out.println("MainActivity: actualizarContextoLocale");
+        setLocale(codigoIdioma, true);
+
+        actualizarFragmentos();
+        actualizarTituloToolbar();
+        actualizarNavbar();
+    }
+
+    public Context actualizarContextoLocale(Context context, String codigoIdioma) {
+        System.out.println("MainActivity: actualizarContextoLocale");
         Locale locale = new Locale(codigoIdioma);
         Locale.setDefault(locale);
 
@@ -106,37 +131,7 @@ public class MainActivity extends AppCompatActivity {
         ));
 
         toolbar.addView(btnIdioma);
-        btnIdioma.setOnClickListener(v -> mostrarPopupIdioma());
         actualizarBotonIdioma(idioma);
-    }
-
-    private void mostrarPopupIdioma() {
-        PopupMenu popup = new PopupMenu(this, btnIdioma);
-        popup.getMenuInflater().inflate(R.menu.idioma_menu, popup.getMenu());
-
-        // mostrar iconos
-        try {
-            Field mFieldPopup = popup.getClass().getDeclaredField("mPopup");
-            mFieldPopup.setAccessible(true);
-            Object mPopup = mFieldPopup.get(popup);
-            mPopup.getClass().getDeclaredMethod("setForceShowIcon", boolean.class)
-                    .invoke(mPopup, true);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        popup.setOnMenuItemClickListener(item -> {
-            String lang = "es";
-            if (item.getItemId() == R.id.idioma_eu) {
-                lang = "eu";
-            } else if (item.getItemId() == R.id.idioma_en) {
-                lang = "en";
-            }
-            setLocale(lang, true);
-            return true;
-        });
-
-        popup.show();
     }
 
     private void actualizarBotonIdioma(String codigoIdioma) {
@@ -218,7 +213,6 @@ public class MainActivity extends AppCompatActivity {
         System.out.println("MainActivity: actualizarNavbar");
         BottomNavigationView navView = findViewById(R.id.nav_view);
         Menu menu = navView.getMenu();
-
         menu.findItem(R.id.navigation_home).setTitle(R.string.titulo_home);
         menu.findItem(R.id.navigation_mapa).setTitle(R.string.titulo_mapa);
         menu.findItem(R.id.navigation_perfil).setTitle(R.string.titulo_perfil);
@@ -233,18 +227,9 @@ public class MainActivity extends AppCompatActivity {
         System.out.println("MainActivity: actualizarTituloToolbar");
 
         if (getSupportActionBar() != null) {
-            NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
-            int currentDest = navController.getCurrentDestination().getId();
-
-            if (currentDest == R.id.navigation_home) {
-                getSupportActionBar().setTitle(R.string.titulo_home);
-            }
-            else if (currentDest == R.id.navigation_mapa) {
-                getSupportActionBar().setTitle(R.string.titulo_mapa);
-            }
-            else {
-                getSupportActionBar().setTitle(R.string.titulo_perfil);
-            }
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+            // no hacemos nada mas porque ya no se usa el titulo
+            // ahora esta el logo
         }
     }
 
@@ -257,17 +242,14 @@ public class MainActivity extends AppCompatActivity {
         }
         else if (estaOffline && !isConnected) {
             System.out.println("INTERNET: Sigue sin haber conexion.");
-            //Toast.makeText(this, "No hay conexión a Internet. \nLa app sigue funcionando sin conexión.", Toast.LENGTH_LONG).show();
         }
         else if (!isConnected) {
             estaOffline = true;
             ToastPersonalizado.showToast(this,"Se ha perdido la conexión a Internet.");
-            //Toast.makeText(this, "Se ha perdido la conexión a Internet.", Toast.LENGTH_LONG).show();
-        } 
+        }
         else {
             estaOffline = false;
             ToastPersonalizado.showToast(this, "Se ha recuperado la conexión a Internet.");
-            //Toast.makeText(this, "Se ha recuperado la conexión a Internet.", Toast.LENGTH_LONG).show();
         }
     }
 

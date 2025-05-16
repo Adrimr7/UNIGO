@@ -1,6 +1,8 @@
 package com.example.unigoapp.interfaz.mapa.andar;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 
@@ -9,20 +11,28 @@ import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
-import org.json.JSONArray;
-import org.json.JSONObject;
+
 import org.osmdroid.util.GeoPoint;
+
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+//import org.json.JSONArray;
+//import org.json.JSONObject;
+//import java.io.BufferedInputStream;
+//import java.io.Serializable;
+//import java.nio.file.Files;
+//import java.nio.file.Paths;
+//import java.util.ArrayList;
 
 public class GrafoAndar {
     private Graph<GeoPoint, DefaultWeightedEdge> grafo;
@@ -36,15 +46,16 @@ public class GrafoAndar {
         this.nodosMap = new HashMap<>();
         construirGrafoEficiente();
     }
-
+    /*
     public void guardarGrafoYMapa(Graph<GeoPoint, DefaultWeightedEdge> grafo, Map<String, GeoPoint> nodosMap, String rutaArchivo) throws IOException {
-        /*
+
         try (ObjectOutputStream oos = new ObjectOutputStream(Files.newOutputStream(Paths.get(rutaArchivo)))) {
             oos.writeObject(grafo);
             oos.writeObject(nodosMap);
         }
-        */
+
     }
+
 
     public void cargarGrafoYMapa(String rutaArchivo) throws IOException, ClassNotFoundException {
         try (ObjectInputStream ois = new ObjectInputStream(Files.newInputStream(Paths.get(rutaArchivo)))) {
@@ -54,27 +65,34 @@ public class GrafoAndar {
             nodosMap = nodosMapActual;
         }
     }
-
+    */
     private void construirGrafoEficiente() {
 
-        long startTime = System.currentTimeMillis();
+        ExecutorService executor = Executors.newSingleThreadExecutor();
 
-        try (InputStream is = context.getAssets().open("grafo.bin");
-             ObjectInputStream ois = new ObjectInputStream(is)) {
-            Graph<GeoPoint, DefaultWeightedEdge> grafoCargado = (Graph<GeoPoint, DefaultWeightedEdge>) ois.readObject();
-            Map<String, GeoPoint> nodosMapCargado = (Map<String, GeoPoint>) ois.readObject();
-            this.grafo = grafoCargado;
-            this.nodosMap = nodosMapCargado;
-            System.out.println("CargaGrafo" + "Grafo cargado desde assets correctamente");
-            Log.d("TiempoGrafo", "Grafo cargado en: " +
-                    (System.currentTimeMillis() - startTime) + " ms");
-            Log.d("Estadisticas", "Nodos: " + grafo.vertexSet().size() +
-                    ", Aristas: " + grafo.edgeSet().size());
+        executor.execute(() -> {
+            long startTime = System.nanoTime();
 
+            try (InputStream is = context.getAssets().open("grafo.bin");
+                 ObjectInputStream ois = new ObjectInputStream(is)) {
 
-        } catch (IOException | ClassNotFoundException e) {
-            System.out.println("CargaGrafo " + "Error al cargar grafo desde assets " + e);
-        }
+                Graph<GeoPoint, DefaultWeightedEdge> grafoCargado = (Graph<GeoPoint, DefaultWeightedEdge>) ois.readObject();
+                Map<String, GeoPoint> nodosMapCargado = (Map<String, GeoPoint>) ois.readObject();
+                long durationMs = (System.nanoTime() - startTime) / 1_000_000;
+
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    this.grafo = grafoCargado;
+                    this.nodosMap = nodosMapCargado;
+
+                    Log.d("TiempoGrafo", "Grafo cargado en: " + durationMs + " ms");
+                    Log.d("Estadisticas", "Nodos: " + grafo.vertexSet().size() +
+                            ", Aristas: " + grafo.edgeSet().size());
+                });
+
+            } catch (IOException | ClassNotFoundException e) {
+                Log.e("CargaGrafo", "Error al cargar grafo desde assets", e);
+            }
+        });
 
         /*
         try (InputStream is = context.getAssets().open("mapa_andar_finish.geojson")) {
@@ -97,7 +115,7 @@ public class GrafoAndar {
 
          */
     }
-
+    /*
     private String inputStreamToString(InputStream is) throws Exception {
         try (java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A")) {
             return s.hasNext() ? s.next() : "";
@@ -169,6 +187,8 @@ public class GrafoAndar {
         nodosMap.put(clave, punto);
         return punto;
     }
+
+     */
 
     public List<GeoPoint> calcularRuta(GeoPoint origen, GeoPoint destino) {
         long startTime = System.currentTimeMillis();

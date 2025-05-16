@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">UnigoApp</string>
+    <string name="app_name">EHUgo!</string>
     <string name="titulo_home">Hasiera</string>
     <string name="titulo_mapa">Mapa</string>
-    <string name="titulo_perfil">Nire Profila</string>
+    <string name="titulo_perfil">Hizkuntza</string>
     <string name="castellano">Gaztelania</string>
     <string name="euskera">Euskara</string>
     <string name="english">Ingelesa</string>
     <string name="texto_home">Hau hasiera fragment da</string>
     <string name="texto_mapa">Hau mapa fragment da</string>
-    <string name="texto_perfil">Hau profil fragment da</string>
+    <string name="texto_perfil">Hau hizkuntza fragment da</string>
     <string name="cambiar_idioma">Hizkuntza aldatu</string>
     <string name="opciones_ruta">Ibilbidea</string>
     <string name="caminar">Oinez</string>
@@ -19,4 +19,23 @@
     <string name="pronostico">Iragarpena</string>
     <string name="calidad_aire">Airearen kalitatea</string>
     <string name="offline">Konexioa beharrezkoa da</string>
+    <string name="cargando_grafos">Grafoak eraikitzen...</string>
+    <string name="permiso_ubi">Kokapenaren baimena</string>
+    <string name="acceso_ubi">Zure kokalekurako baimena behar dugu ibilbide zehatzak erakusteko</string>
+    <string name="entendido">Ulertuta</string>
+    <string name="mapa_sin_conexion">Internet gabeko mapa</string>
+    <string name="calc_andando">Oinezko ibilbidea lortzen...</string>
+    <string name="calc_bici">Bizikletarentzat ibilbidea lortzen...</string>
+    <string name="calc_bus">Autobusez ibilbidea lortzen...</string>
+    <string name="tranvia">Tranbia</string>
+    <string name="calc_tranvia" >Tranbiaz ibilbidea lortzen...</string>
+    <string name="salida_a">"Irteera: "</string>
+    <string name="bus_sale_a">"Autobusaren irteera: "</string>
+    <string name="llegada_a">"Helmuga: "</string>
+    <string name="destino">"Helmuga geltokia: "</string>
+    <string name="origen">"Hasierako geltokia: "</string>
+    <string name="ubicacion_no_disp">Kokalekua ez dago erabilgarri.</string>
+    <string name="tranvia_sale_a" >"Tranbiaren irteera: "</string>
+    <string name="ya_se_pueden_ver_rutas_andando">Oinezko ibilibideak ikus daitezke.</string>
+    <string name="calc_toast_andando">Oinezko ibilbideak lortzen. Itxaron mesedez.</string>
 </resources>
