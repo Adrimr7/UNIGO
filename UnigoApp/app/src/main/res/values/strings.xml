@@ -13,6 +13,10 @@
     <string name="caminar">Caminar</string>
     <string name="en_bici">En Bici</string>
     <string name="en_bus">En Bus</string>
+    <string name="temperatura">Temperatura</string>
+    <string name="pronostico">Pronóstico</string>
+    <string name="calidad_aire">Calidad del aire</string>
+    <string name="offline">No disponible sin conexión</string>
     <string name="cargando_grafos">Cargando grafos...</string>
     <string name="permiso_ubi">Permiso de ubicación</string>
     <string name="acceso_ubi">Necesitamos acceso a tu ubicación para mostrarte rutas precisas</string>

@@ -15,6 +15,10 @@
     <string name="caminar">Walking</string>
     <string name="en_bici">With a Bike</string>
     <string name="en_bus">By Bus</string>
+    <string name="temperatura">Temperature</string>
+    <string name="pronostico">Forecast</string>
+    <string name="calidad_aire">Air quality</string>
+    <string name="offline">Not available offline</string>
     <string name="cargando_grafos">Loading graphs...</string>
     <string name="permiso_ubi">Location permission</string>
     <string name="acceso_ubi">Your location permission is needed to form the routes.</string>

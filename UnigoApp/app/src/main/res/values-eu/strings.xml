@@ -15,6 +15,10 @@
     <string name="caminar">Oinez</string>
     <string name="en_bici">Bizikletaz</string>
     <string name="en_bus">Autobusez</string>
+    <string name="temperatura">Tenperatura</string>
+    <string name="pronostico">Iragarpena</string>
+    <string name="calidad_aire">Airearen kalitatea</string>
+    <string name="offline">Konexioa beharrezkoa da</string>
     <string name="cargando_grafos">Grafoak eraikitzen...</string>
     <string name="permiso_ubi">Kokapenaren baimena</string>
     <string name="acceso_ubi">Zure kokalekurako baimena behar dugu ibilbide zehatzak erakusteko</string>
