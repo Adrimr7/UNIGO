@@ -118,8 +118,20 @@ public class GrafosSingleton {
         return (RutaInfo) Collections.emptyList();
     }
 
-    public static synchronized List<GeoPoint> calcRutaTranvia(GeoPoint origen, GeoPoint destino) {
-        return grafoTranvia.calcularRuta(origen, destino);
+    public static synchronized RutaInfo calcRutaTranvia(GeoPoint origen, GeoPoint destino) {
+        RutaInfo rutaInfo = grafoTranvia.calcularRuta(origen, destino);
+        if (rutaInfo != null) {
+            Log.d("RutaTranvia", String.format("Estación origen: %s - Lat: %.6f, Lon: %.6f",
+                    rutaInfo.getNombreOrigen(),
+                    rutaInfo.getEstacionOrigen().getLatitude(),
+                    rutaInfo.getEstacionOrigen().getLongitude()));
+            Log.d("RutaTranvia", String.format("Estación destino: %s - Lat: %.6f, Lon: %.6f",
+                    rutaInfo.getNombreDestino(),
+                    rutaInfo.getEstacionDestino().getLatitude(),
+                    rutaInfo.getEstacionDestino().getLongitude()));
+            return rutaInfo;
+        }
+        return (RutaInfo) Collections.emptyList();
     }
 
 }

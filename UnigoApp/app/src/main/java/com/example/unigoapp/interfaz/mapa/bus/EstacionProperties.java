@@ -8,7 +8,7 @@ public class EstacionProperties implements Serializable {
     private final int stopId;
     private LocalTime nextArrival;
 
-    EstacionProperties(String nombre, int stopId) {
+    public EstacionProperties(String nombre, int stopId) {
         this.nombre = nombre;
         this.stopId = stopId;
     }

@@ -49,6 +49,9 @@ public class MainActivity extends AppCompatActivity {
             GrafosSingleton.getGrafoAndar(this);
             long endTime = System.currentTimeMillis();
             System.out.println("TiempoEjecucion: Grafo ANDAR cargados en " + (endTime - tiempoInicio) + " ms");
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                ToastPersonalizado.showToast(getApplicationContext(), getString(R.string.ya_se_pueden_ver_rutas_andando));
+            }, 48000);
         }).start();
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());

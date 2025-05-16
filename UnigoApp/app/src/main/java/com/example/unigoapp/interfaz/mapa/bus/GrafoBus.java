@@ -1,16 +1,11 @@
 package com.example.unigoapp.interfaz.mapa.bus;
 
 import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 
 import com.example.unigoapp.interfaz.mapa.RutaInfo;
 
 import org.jgrapht.Graph;
-import org.jgrapht.GraphPath;
-import org.jgrapht.alg.shortestpath.DijkstraManyToManyShortestPaths;
-import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleDirectedWeightedGraph;
 
@@ -21,23 +16,18 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
 
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import java.io.File;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -148,7 +138,7 @@ public class GrafoBus {
 
 
     private void cargarHorarios() {
-        try (InputStream is = context.getAssets().open("horarios_bus_simple.txt")) {
+        try (InputStream is = context.getAssets().open("horarios_bus_def.txt")) {
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));
             String line;
             boolean isHeader = true;
@@ -354,7 +344,14 @@ public class GrafoBus {
 
             }
             int minutosEstimados = Math.max(0, rutaFinal.size() - 1) * 2;
-            LocalTime horaLlegadaEstimada = LocalTime.now().plusMinutes(minutosEstimados);
+            LocalTime horaLlegadaEstimada;
+            if (obtenerSiguienteLlegada(estacionInicio) != null){
+                horaLlegadaEstimada = obtenerSiguienteLlegada(estacionInicio).plusMinutes(minutosEstimados);
+            }
+            else {
+                horaLlegadaEstimada = null;
+            }
+
             rutaDevolver = new RutaInfo(rutaFinal, obtenerNombreEstacion(estacionInicio), obtenerNombreEstacion(estacionFin),
                     origen, destino, obtenerSiguienteLlegada(estacionInicio), horaLlegadaEstimada);
             return rutaDevolver;

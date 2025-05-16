@@ -24,9 +24,13 @@
     <string name="titulo_home">Inicio</string>
     <string name="tranvia">Tranvía</string>
     <string name="calc_tranvia" >Cargando ruta de tranvía...</string>
-    <string name="salida_a">Salida a las:</string>
-    <string name="bus_sale_a">El bus sale a las:</string>
-    <string name="llegada_a">Llegada a las:</string>
+    <string name="salida_a">"Salida a las: "</string>
+    <string name="bus_sale_a">"El bus sale a las: "</string>
+    <string name="llegada_a">"Llegada a las: "</string>
     <string name="destino">"Destino: "</string>
-    <string name="origen">Origen:</string>
+    <string name="origen">"Origen: "</string>
+    <string name="ubicacion_no_disp">Ubicación no disponible en este momento.</string>
+    <string name="tranvia_sale_a">"El tranvía sale a las: "</string>
+    <string name="ya_se_pueden_ver_rutas_andando">Ya se pueden ver rutas andando.</string>
+    <string name="calc_toast_andando">Cargando grafo de andar. Espere.</string>
 </resources>

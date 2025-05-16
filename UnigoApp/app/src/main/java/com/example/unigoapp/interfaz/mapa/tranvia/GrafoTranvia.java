@@ -3,6 +3,9 @@ package com.example.unigoapp.interfaz.mapa.tranvia;
 import android.content.Context;
 import android.util.Log;
 
+import com.example.unigoapp.interfaz.mapa.RutaInfo;
+import com.example.unigoapp.interfaz.mapa.bus.EstacionProperties;
+
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
@@ -13,8 +16,8 @@ import org.json.JSONObject;
 import org.osmdroid.util.GeoPoint;
 
 import java.io.InputStream;
+import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,19 +26,23 @@ public class GrafoTranvia {
     private final Graph<GeoPoint, DefaultWeightedEdge> grafo;
     private final Map<String, GeoPoint> nodosMap;
     private final Context context;
-    private static final double DISTANCIA_MINIMA_NODOS = 10.0; // 10 metros
+    private Map<String, GeoPoint> estacionesMap;
+    private Map<String, EstacionProperties> estacionesProperties;
+    private static final double DISTANCIA_MINIMA_NODOS = 14.0; // 14 metros
 
     public GrafoTranvia(Context context) {
         this.context = context;
         this.grafo = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
         this.nodosMap = new HashMap<>();
+        this.estacionesMap = new HashMap<>();
+        this.estacionesProperties = new HashMap<>();
         construirGrafoEficiente();
     }
 
     private void construirGrafoEficiente() {
         long startTime = System.currentTimeMillis();
 
-        try (InputStream is = context.getAssets().open("rutas_tranvia.geojson")) {
+        try (InputStream is = context.getAssets().open("new_tranvias.geojson")) {
             String json = inputStreamToString(is);
             JSONArray features = new JSONObject(json).getJSONArray("features");
 
@@ -62,22 +69,33 @@ public class GrafoTranvia {
         if (feature.isNull("geometry")) return;
 
         JSONObject geometry = feature.getJSONObject("geometry");
-        if (!"LineString".equals(geometry.getString("type"))) return;
+        JSONObject properties = feature.getJSONObject("properties");
 
-        JSONArray coords = geometry.getJSONArray("coordinates");
+        JSONArray coordArray = geometry.getJSONArray("coordinates");
+
         List<GeoPoint> puntosLinea = new ArrayList<>();
+        if (coordArray.length() > 2) {
+            for (int j = 0; j < coordArray.length(); j++) {
+                JSONArray punto = coordArray.getJSONArray(j);
+                puntosLinea.add(new GeoPoint(punto.getDouble(1), punto.getDouble(0)));
+            }
 
-        for (int j = 0; j < coords.length(); j++) {
-            JSONArray punto = coords.getJSONArray(j);
-            puntosLinea.add(new GeoPoint(punto.getDouble(1), punto.getDouble(0)));
+            if (puntosLinea.size() < 2) return;
+
+            // simplificar puntos y conectar nodos
+            List<GeoPoint> puntosSimplificados = simplificarLinea(puntosLinea);
+            conectarNodosEnLinea(puntosSimplificados);
+        }
+        else
+        {
+            GeoPoint estacion = new GeoPoint(coordArray.getDouble(0), coordArray.getDouble(1));
+            String nombre = properties.getString("stop_name");
+            String stopId = feature.getString("id");
+
+            estacionesMap.put(stopId, estacion);
+            estacionesProperties.put(stopId, new EstacionProperties(nombre, Integer.parseInt(stopId)));
         }
 
-        if (puntosLinea.size() < 2) return;
-
-        // simplificar puntos y conectar nodos
-        List<GeoPoint> puntosSimplificados = simplificarLinea(puntosLinea);
-
-        conectarNodosEnLinea(puntosSimplificados);
     }
 
     private List<GeoPoint> simplificarLinea(List<GeoPoint> puntos) {
@@ -138,39 +156,54 @@ public class GrafoTranvia {
                 }
             }
         }
-
         return masCercano;
     }
 
-    public List<GeoPoint> calcularRuta(GeoPoint origen, GeoPoint destino) {
+    public RutaInfo calcularRuta(GeoPoint origen, GeoPoint destino) {
         long startTime = System.currentTimeMillis();
+        RutaInfo rutaDevolver = new RutaInfo(new ArrayList<>(), "No encontrada", "No encontrada", origen, destino, LocalTime.now(), LocalTime.now());;
 
+        GeoPoint estacionInicio = encontrarNodoCercano(origen);
+        GeoPoint estacionFin = encontrarNodoCercano(destino);
 
-        GeoPoint origenMasCercano = encontrarNodoCercano(origen);
-        GeoPoint destinoMasCercano = encontrarNodoCercano(destino);
-
-        if (origenMasCercano == null || destinoMasCercano == null || origenMasCercano.equals(destinoMasCercano)) {
-            return Collections.emptyList();
+        if (estacionInicio == null || estacionFin == null || estacionInicio.equals(estacionFin)) {
+            return rutaDevolver;
         }
 
         // encontrar los paths
         try {
             DijkstraShortestPath<GeoPoint, DefaultWeightedEdge> dijkstra = new DijkstraShortestPath<>(grafo);
-            GraphPath<GeoPoint, DefaultWeightedEdge> rutaPropuesta = dijkstra.getPath(origenMasCercano, destinoMasCercano);
+            GraphPath<GeoPoint, DefaultWeightedEdge> rutaPropuesta = dijkstra.getPath(estacionInicio, estacionFin);
             
             if (rutaPropuesta == null) {
-                return Collections.emptyList();
+                return rutaDevolver;
             }
             
             List<GeoPoint> rutaFinal = new ArrayList<>(rutaPropuesta.getVertexList());
 
             Log.d("TiempoRuta", "Ruta calculada en: " + (System.currentTimeMillis() - startTime) + " ms");
-            Log.d("Info", "Distancia desde origen al nodo más cercano: " + origen.distanceToAsDouble(origenMasCercano));
-
-            return rutaFinal;
+            Log.d("Info", "Distancia desde origen al nodo más cercano: " + origen.distanceToAsDouble(estacionInicio));
+            LocalTime proxTranvia = calcularProximoTranvia();
+            // 1min 10s entre parada y parada
+            LocalTime tiempoLlegada = proxTranvia.plusMinutes(
+                    (long)(rutaFinal.size() * 0.4)
+            );
+            return new RutaInfo(rutaFinal, "", "",
+                    estacionInicio, estacionFin, calcularProximoTranvia(), tiempoLlegada);
         } catch (Exception e) {
             Log.e("RutaError", "Error calculando ruta", e);
-            return Collections.emptyList();
+            return rutaDevolver;
         }
+    }
+
+    private LocalTime calcularProximoTranvia() {
+        LocalTime ahora = LocalTime.now();
+        int minutos = ahora.getMinute();
+        int proximosMinutos = (((minutos / 15) + 1) * 15) - 1;
+
+        return ahora
+                .withMinute(proximosMinutos)
+                .withSecond(0)
+                .withNano(0);
     }
 }

@@ -30,4 +30,8 @@
     <string name="llegada_a">"Helmuga: "</string>
     <string name="destino">"Helmuga geltokia: "</string>
     <string name="origen">"Hasierako geltokia: "</string>
+    <string name="ubicacion_no_disp">Kokalekua ez dago erabilgarri.</string>
+    <string name="tranvia_sale_a" >"Tranbiaren irteera: "</string>
+    <string name="ya_se_pueden_ver_rutas_andando">Oinezko ibilibideak ikus daitezke.</string>
+    <string name="calc_toast_andando">Oinezko ibilbideak lortzen. Itxaron mesedez.</string>
 </resources>

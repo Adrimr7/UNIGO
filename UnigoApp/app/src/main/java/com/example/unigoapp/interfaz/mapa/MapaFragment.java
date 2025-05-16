@@ -62,6 +62,7 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.io.File;
 import java.util.concurrent.Executors;
@@ -90,6 +91,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
     private ProgressDialog progressDialog;
     private FloatingActionButton fabOpciones;
     private ScheduledExecutorService scheduler;
+    private MyLocationNewOverlay ubicacionOverlay;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -187,13 +189,20 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
     }
     private void habilitarUbicacion() {
         System.out.println("MapaFrag: habilitarUbicacion");
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
 
-            MyLocationNewOverlay ubicacionOverlay = new MyLocationNewOverlay(
-                    new GpsMyLocationProvider(requireContext()), mvMapa);
-            ubicacionOverlay.enableMyLocation();
-            mvMapa.getOverlays().add(ubicacionOverlay);
-        }
+        ubicacionOverlay = new MyLocationNewOverlay(
+                new GpsMyLocationProvider(requireContext()), mvMapa);
+        ubicacionOverlay.enableMyLocation();
+        ubicacionOverlay.enableFollowLocation();
+        ubicacionOverlay.setDrawAccuracyEnabled(true);
+        mvMapa.getOverlays().add(ubicacionOverlay);
+        mvMapa.invalidate();
+    }
+
+    private boolean estaUbiDisponible() {
+        return ubicacionOverlay != null &&
+                ubicacionOverlay.getMyLocation() != null &&
+                ubicacionOverlay.isMyLocationEnabled();
     }
 
     private void configurarMapa() {
@@ -232,9 +241,6 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         );
         mvMapa.setMinZoomLevel(10.9);
 
-        Marker marker = crearMarkerConTexto(requireContext(), mvMapa, CENTRO_GASTEIZ, "Vitoria-Gasteiz", R.drawable.ic_mi_ubicacion);
-        mvMapa.getOverlays().add(marker);
-        mvMapa.invalidate();
 /*
         Thread hiloBuses = new Thread(() -> {
             long startTime = System.currentTimeMillis();
@@ -328,7 +334,14 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
 
 
     private void centrarMapaEnGasteiz() {
-        mvMapa.getController().animateTo(CENTRO_GASTEIZ);
+        if (estaUbiDisponible()) {
+            mvMapa.getController().animateTo(ubicacionOverlay.getMyLocation());
+        }
+        else {
+            mvMapa.getController().animateTo(CENTRO_GASTEIZ);
+            System.out.println("Ubicacion no detectada.");
+        }
+
     }
 
     @Override
@@ -383,7 +396,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
             distanciaTotalMetros += puntoA.distanceToAsDouble(puntoB);
         }
         double distanciaKm = distanciaTotalMetros / 1000.0;
-        double velocidadMediaKmH = 13.8;
+        double velocidadMediaKmH = 11.8;
         double tiempoEstimadoMin = (distanciaKm / velocidadMediaKmH) * 60;
         int minutosEstimados = (int) Math.round(tiempoEstimadoMin);
 
@@ -409,7 +422,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
 
         int minutosEstimados = (int) Math.round(tiempoEstimadoMin);
 
-        return LocalTime.now().plusMinutes(minutosEstimados);
+        return LocalTime.now().plusMinutes(minutosEstimados).truncatedTo(ChronoUnit.MINUTES);
     }
 
     private void calcularYMostrarRutaBici(GeoPoint destino) {
@@ -428,23 +441,15 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
 
         rutaActual = new Polyline();
         rutaActual.setPoints(ruta);
-        rutaActual.setColor(ContextCompat.getColor(requireContext(), R.color.purple_500));
+        rutaActual.setColor(ContextCompat.getColor(requireContext(), R.color.primary_variant));
         rutaActual.setWidth(11f);
 
-        markerOrigen = crearMarkerConTexto(
-                requireContext(),
-                mvMapa,
-                ruta.get(0),
-                getString(R.string.en_bici),
-                R.drawable.ic_bike
-        );
-        mvMapa.getOverlays().add(markerOrigen);
 
         markerDestino = crearMarkerConTexto(
                 requireContext(),
                 mvMapa,
-                ruta.get(-1),
-                getString(R.string.llegada_a) + calcularTiempoEnBici(ruta),
+                ruta.get(ruta.size()-1),
+                getString(R.string.llegada_a) + calcularTiempoEnBici(ruta).truncatedTo(ChronoUnit.MINUTES),
                 R.drawable.ic_bike
         );
         mvMapa.getOverlays().add(markerDestino);
@@ -482,7 +487,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
             markerOrigen = crearMarkerConTexto(
                     requireContext(),
                     mvMapa,
-                    rutaInfo.getEstacionOrigen(),
+                    ruta.get(0),
                     getString(R.string.origen) + rutaInfo.getNombreOrigen() + "\n" + getString(R.string.salida_a) + rutaInfo.getProximoBus(),
                     R.drawable.ic_bus
             );
@@ -492,7 +497,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
             markerDestino = crearMarkerConTexto(
                     requireContext(),
                     mvMapa,
-                    rutaInfo.getEstacionDestino(),
+                    ruta.get(ruta.size()-1),
                     getString(R.string.destino) + rutaInfo.getNombreDestino() + "\n" + getString(R.string.llegada_a) + rutaInfo.getTiempoEstimado(),
                     R.drawable.ic_bus
             );
@@ -506,7 +511,9 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
 
     private void calcularYMostrarRutaTranvia(GeoPoint destino) {
 
-        List<GeoPoint> ruta = GrafosSingleton.calcRutaTranvia(destino, PUNTO_UNIVERSIDAD);
+        RutaInfo rutaInfo = GrafosSingleton.calcRutaTranvia(destino, PUNTO_UNIVERSIDAD);
+
+        List<GeoPoint> ruta = rutaInfo.getPuntos();
 
         if (ruta == null || ruta.isEmpty()) return;
 
@@ -524,6 +531,33 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         rutaActual.setWidth(11f);
 
         mvMapa.getOverlays().add(rutaActual);
+
+        // se llama getProximoBus pero habria que cambiarle el nombre a
+        // getProximaHora o algo similar
+        if (rutaInfo.getProximoBus() == null) {
+            ToastPersonalizado.showToast(getContext(), getString(R.string.tranvia_sale_a) + rutaInfo.getProximoBus());
+        }
+        else {
+            markerOrigen = crearMarkerConTexto(
+                    requireContext(),
+                    mvMapa,
+                    ruta.get(0),
+                    getString(R.string.origen) + rutaInfo.getNombreOrigen() + "\n" + getString(R.string.salida_a) + rutaInfo.getProximoBus(),
+                    R.drawable.ic_tram
+            );
+            mvMapa.getOverlays().add(markerOrigen);
+
+            ToastPersonalizado.showToast(getContext(), getString(R.string.tranvia_sale_a) + rutaInfo.getProximoBus());
+            markerDestino = crearMarkerConTexto(
+                    requireContext(),
+                    mvMapa,
+                    ruta.get(ruta.size()-1),
+                    getString(R.string.destino) + rutaInfo.getNombreDestino() + "\n" + getString(R.string.llegada_a) + rutaInfo.getTiempoEstimado(),
+                    R.drawable.ic_tram
+            );
+            mvMapa.getOverlays().add(markerDestino);
+        }
+
         mvMapa.invalidate();
     }
 
@@ -565,9 +599,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
             }
 
             mvMapa.invalidate(); // refresca el mapa
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
+        } catch (JSONException | IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -609,9 +641,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
                 }
 
                 mvMapa.invalidate(); // refresca el mapa
-            } catch (JSONException e) {
-                throw new RuntimeException(e);
-            } catch (IOException e) {
+            } catch (JSONException | IOException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -653,9 +683,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
                 }
 
                 mvMapa.invalidate(); // refresca el mapa
-            } catch (JSONException e) {
-                throw new RuntimeException(e);
-            } catch (IOException e) {
+            } catch (JSONException | IOException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -679,19 +707,10 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         rutaActual.setColor(ContextCompat.getColor(requireContext(), R.color.purple_500));
         rutaActual.setWidth(11f);
 
-        markerOrigen = crearMarkerConTexto(
-                requireContext(),
-                mvMapa,
-                ruta.get(0),
-                getString(R.string.origen),
-                R.drawable.ic_walk
-        );
-        mvMapa.getOverlays().add(markerOrigen);
-
         markerDestino = crearMarkerConTexto(
                 requireContext(),
                 mvMapa,
-                ruta.get(-1),
+                ruta.get(ruta.size()-1),
                 getString(R.string.llegada_a) + calcularTiempoAndando(ruta),
                 R.drawable.ic_walk
         );
@@ -755,8 +774,20 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
                 progressDialog.show();
 
                 new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    // TODO: cambiar ubicacion a la actual.
-                    calcularYMostrarRutaAndando(CENTRO_GASTEIZ);
+                    if (estaUbiDisponible() ){
+                        if (GrafosSingleton.getProcesoAndar() == 2)
+                        {
+                            calcularYMostrarRutaAndando(ubicacionOverlay.getMyLocation());
+                        }
+                        else {
+                            ToastPersonalizado.showToast(requireContext(), getString(R.string.calc_toast_andando));
+                        }
+
+                    }
+                    else {
+                        ToastPersonalizado.showToast(requireContext(), getString(R.string. ubicacion_no_disp));
+                    }
+
                     progressDialog.dismiss();
                 }, 100);
             }
@@ -774,8 +805,13 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
                 progressDialog.show();
 
                 new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    // TODO: cambiar ubicacion a la actual.
-                    calcularYMostrarRutaBici(CENTRO_GASTEIZ);
+                    if (estaUbiDisponible()){
+                        calcularYMostrarRutaBici(ubicacionOverlay.getMyLocation());
+                    }
+                    else {
+                        ToastPersonalizado.showToast(requireContext(), getString(R.string. ubicacion_no_disp));
+                    }
+
                     progressDialog.dismiss();
                 }, 100);
             }
@@ -788,10 +824,15 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
             progressDialog.show();
 
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                // TODO: cambiar ubicacion a la actual.
-                calcularYMostrarRutaBus(CENTRO_GASTEIZ);
+                if (estaUbiDisponible()){
+                    calcularYMostrarRutaBus(ubicacionOverlay.getMyLocation());
+                }
+                else {
+                    ToastPersonalizado.showToast(requireContext(), getString(R.string. ubicacion_no_disp));
+                }
+
                 progressDialog.dismiss();
-            }, 100);
+            },100);
         }
         else if (tipo.equals("tranvia")) {
 
@@ -801,8 +842,13 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
             progressDialog.show();
 
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                // TODO: cambiar ubicacion a la actual.
-                calcularYMostrarRutaTranvia(CENTRO_GASTEIZ);
+                if (estaUbiDisponible()){
+                    calcularYMostrarRutaTranvia(ubicacionOverlay.getMyLocation());
+                }
+                else {
+                    ToastPersonalizado.showToast(requireContext(), getString(R.string. ubicacion_no_disp));
+                }
+
                 progressDialog.dismiss();
             }, 100);
         }

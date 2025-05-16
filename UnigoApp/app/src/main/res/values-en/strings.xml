@@ -17,7 +17,7 @@
     <string name="en_bus">By Bus</string>
     <string name="cargando_grafos">Loading graphs...</string>
     <string name="permiso_ubi">Location permission</string>
-    <string name="acceso_ubi">Necesitamos acceso a tu ubicación para mostrarte rutas precisas</string>
+    <string name="acceso_ubi">Your location permission is needed to form the routes.</string>
     <string name="entendido">Understood</string>
     <string name="mapa_sin_conexion">No connection map mode</string>
     <string name="calc_andando">Loading walking route...</string>
@@ -30,4 +30,8 @@
     <string name="llegada_a">"Arrival: "</string>
     <string name="destino">"Arrival station: "</string>
     <string name="origen">"Departure station: "</string>
+    <string name="ubicacion_no_disp">Location not available at the moment.</string>
+    <string name="tranvia_sale_a">"The tram departures at: "</string>
+    <string name="ya_se_pueden_ver_rutas_andando">The walking routes can be executed now.</string>
+    <string name="calc_toast_andando">Loading walking graph, wait please.</string>
 </resources>
