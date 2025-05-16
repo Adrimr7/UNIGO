@@ -140,10 +140,6 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
                 }, 0, 1, TimeUnit.SECONDS);
             }).start();
         }
-        else {
-            //ToastPersonalizado.showToast(getContext(), "");
-        }
-
         mvMapa.setOnTouchListener((v, event) -> false); // necesario para que reciba los clicks
         mvMapa.getOverlays().add(new MapEventsOverlay(requireContext(), new MapEventsReceiver() {
             @Override

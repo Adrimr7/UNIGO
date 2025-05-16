@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
             System.out.println("TiempoEjecucion: Grafo ANDAR cargados en " + (endTime - tiempoInicio) + " ms");
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
                 ToastPersonalizado.showToast(getApplicationContext(), getString(R.string.ya_se_pueden_ver_rutas_andando));
-            }, 48000);
+            }, 47000);
         }).start();
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -129,6 +129,7 @@ public class MainActivity extends AppCompatActivity {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 Gravity.END
         ));
+        btnIdioma.setPadding(0,0,24,0);
 
         toolbar.addView(btnIdioma);
         actualizarBotonIdioma(idioma);

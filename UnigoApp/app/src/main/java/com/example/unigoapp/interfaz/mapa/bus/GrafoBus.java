@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.io.ObjectOutputStream;
@@ -150,9 +149,9 @@ public class GrafoBus {
                     isHeader = false;
                     continue;
                 }
-
+                // trip_id,arrival_time,departure_time,stop_id,stop_sequence
                 String[] parts = line.split(",");
-                if (parts.length >= 5) {  // trip_id,arrival_time,departure_time,stop_id,stop_sequence
+                if (parts.length >= 5) {
                     try {
                         // arrival y el stop_id
                         busSchedule.addArrivalTime(parts[3], parts[1]);

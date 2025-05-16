@@ -9,8 +9,8 @@
     <androidx.cardview.widget.CardView
         android:id="@+id/weather_card"
         style="@style/Widget.App.CardView"
-        android:layout_width="354dp"
-        android:layout_height="492dp"
+        android:layout_width="347dp"
+        android:layout_height="371dp"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -93,17 +93,17 @@
 
             <TextView
                 android:id="@+id/now_temp_text"
-                android:layout_width="166dp"
-                android:layout_height="100dp"
+                android:layout_width="157dp"
+                android:layout_height="84dp"
                 android:text="99ºC"
                 android:textColor="@color/black"
                 android:textSize="72sp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.097"
+                app:layout_constraintHorizontal_bias="0.101"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.458"
+                app:layout_constraintVertical_bias="0.427"
                 tools:visibility="visible" />
 
             <TextView
@@ -184,8 +184,8 @@
     <androidx.cardview.widget.CardView
         android:id="@+id/cardView"
         style="@style/Widget.App.CardView"
-        android:layout_width="360dp"
-        android:layout_height="108dp"
+        android:layout_width="346dp"
+        android:layout_height="109dp"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -216,8 +216,8 @@
                 android:id="@+id/disabled_text_air"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/offline"
                 android:gravity="center"
+                android:text="@string/offline"
                 android:textColor="@color/black"
                 android:textSize="18sp"
                 app:layout_constraintBottom_toBottomOf="parent"
