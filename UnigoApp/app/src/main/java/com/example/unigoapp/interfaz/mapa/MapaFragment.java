@@ -561,7 +561,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
         mvMapa.invalidate();
     }
 
-
+    /*
     private void cargarCarrilesBici() {
         try {
             InputStream is = requireContext().getAssets().open("viasciclistas23.geojson");
@@ -648,7 +648,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
 
         private void cargarAndar() {
             try {
-                InputStream is = requireContext().getAssets().open("mapaandando_utf8.geojson");
+                InputStream is = requireContext().getAssets().open("mapa_andar_finish.geojson");
                 int size = is.available();
                 byte[] buffer = new byte[size];
                 is.read(buffer);
@@ -687,7 +687,7 @@ public class MapaFragment extends Fragment implements MainActivity.UpdatableFrag
                 throw new RuntimeException(e);
             }
         }
-
+    */
     private void calcularYMostrarRutaAndando(GeoPoint destino) {
 
         List<GeoPoint> ruta = GrafosSingleton.calcRutaAndar(destino, PUNTO_UNIVERSIDAD);
