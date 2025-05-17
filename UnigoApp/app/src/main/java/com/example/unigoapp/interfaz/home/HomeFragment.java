@@ -169,21 +169,29 @@ public class HomeFragment extends Fragment implements MainActivity.UpdatableFrag
             ivMin.setVisibility(View.INVISIBLE);
             tvForecastTitle.setVisibility(View.INVISIBLE);
             ivWeather.setVisibility(View.INVISIBLE);
+            tvNowtemp.setText(String.valueOf(tempNow+"ºC"));
+            tvMaxTemp.setText(String.valueOf(tempMax+"º"));
+            tvMintemp.setText(String.valueOf(tempMin+"º"));
 
         } else{
             selectWeatherIcon(forecastEs);
             ivMax.setVisibility(View.VISIBLE);
             ivMin.setVisibility(View.VISIBLE);
             tvForecastTitle.setVisibility(View.VISIBLE);
+            tvforecast.setVisibility(View.VISIBLE);
+            tvMaxTemp.setVisibility(View.VISIBLE);
+            tvMintemp.setVisibility(View.VISIBLE);
+            tvNowtemp.setVisibility(View.VISIBLE);
             ivWeather.setVisibility(View.VISIBLE);
             tvOfflineWeather.setVisibility(View.INVISIBLE);
-            tvNowtemp.setText(String.valueOf(tempNow)+"ºC");
-            tvMaxTemp.setText(String.valueOf(tempMax)+"º");
-            tvMintemp.setText(String.valueOf(tempMin)+"º");
+            tvNowtemp.setText(String.valueOf(tempNow+"ºC"));
+            tvMaxTemp.setText(String.valueOf(tempMax+"º"));
+            tvMintemp.setText(String.valueOf(tempMin+"º"));
+            String e = (String) tvMaxTemp.getText();
             if (language.equals("es")) {
-                tvforecast.setText(String.valueOf(forecastEs));
+                tvforecast.setText(forecastEs);
             } else if (language.equals("eu")) {
-                tvforecast.setText(String.valueOf(forecastEu));
+                tvforecast.setText(forecastEu);
             } else{
                 tvforecast.setText("There is not forecast data for the selected language.");
             }
